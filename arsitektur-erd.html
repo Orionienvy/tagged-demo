@@ -84,7 +84,7 @@ tr:last-child td{border-bottom:none}
     <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg></div>
     <div><div class="h1">Tagged — Arsitektur &amp; Skema Database</div></div>
   </header>
-  <div class="sub">Manajemen Aset &amp; Tracking · Realco / Realfood · dokumen teknis pendamping requirement</div>
+  <div class="sub">Manajemen Aset &amp; Tracking · Perusahaan Demo · dokumen teknis pendamping requirement</div>
   <div class="nav"><a href="#arsitektur">1 · Arsitektur Sistem</a><a href="#erd">2 · Skema Database (ERD)</a><a href="#stack">Tech Stack</a></div>
 
   <!-- ARSITEKTUR -->
@@ -195,15 +195,15 @@ tr:last-child td{border-bottom:none}
     <div class="erd-grid">
       <div class="ent"><div class="ent-h">company</div><ul>
         <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
-        <li class="fld"><span class="nm">kode</span><span class="muted">RKI/RWA/ALI/EJP/HMW</span></li>
+        <li class="fld"><span class="nm">kode</span><span class="muted">C1/C2/ALI/C4/C5</span></li>
         <li class="fld"><span class="nm">nama</span></li></ul></div>
       <div class="ent"><div class="ent-h">site</div><ul>
         <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
-        <li class="fld"><span class="nm">nama_kota</span><span class="muted">Bojonegoro…</span></li></ul></div>
+        <li class="fld"><span class="nm">nama_kota</span><span class="muted">Kota A…</span></li></ul></div>
       <div class="ent"><div class="ent-h">sub_site</div><ul>
         <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
         <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">site_id</span></li>
-        <li class="fld"><span class="nm">nama</span><span class="muted">Realco Spazio…</span></li>
+        <li class="fld"><span class="nm">nama</span><span class="muted">Demo Spazio…</span></li>
         <li class="fld"><span class="nm">alamat</span></li></ul></div>
       <div class="ent"><div class="ent-h">category</div><ul>
         <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
@@ -324,7 +324,7 @@ tr:last-child td{border-bottom:none}
       <tbody>
         <tr><td class="mono">site</td><td><span class="card-rel">1 — N</span></td><td class="mono">sub_site</td><td>1 kota punya banyak sub-site</td></tr>
         <tr><td class="mono">sub_site</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>tiap aset terikat 1 sub-site</td></tr>
-        <tr><td class="mono">company</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>RKI / RWA / ALI / EJP / HMW</td></tr>
+        <tr><td class="mono">company</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>C1 / C2 / ALI / C4 / C5</td></tr>
         <tr><td class="mono">category</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>self-ref parent_id (bertingkat)</td></tr>
         <tr><td class="mono">employee</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>sebagai PIC / pemegang</td></tr>
         <tr><td class="mono">employee</td><td><span class="card-rel">1 — 1</span></td><td class="mono">user</td><td>akun login (opsional)</td></tr>
