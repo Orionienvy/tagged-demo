@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagged — Manajemen Aset &amp; Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* fleet-tokens */
+:root{
+  --bg:#ffffff; --surface:#ffffff; --ink:#0a0a0a; --muted:#71717a;
+  --accent:#6d5efc; --on-accent:#ffffff;
+  --primary:#18181b; --on-primary:#fafafa;
+  --font-head:'Inter Tight', system-ui, sans-serif;
+  --density:1; --atmos:0;
+}
+/* /fleet-tokens */
+/* semantic status colors (allowed exception) */
+:root{ --ok:#16a34a; --warn:#d97706; --err:#dc2626; --info:#2563eb; }
+/* manual dark-mode toggle — overrides token palette */
+body.dark{
+  --bg:#09090b; --surface:#111113; --ink:#fafafa; --muted:#a1a1aa;
+  --accent:#8b7dff; --on-accent:#0a0a0a;
+  --primary:#fafafa; --on-primary:#18181b;
+  --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --info:#60a5fa;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:Inter,system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:var(--atmos,0);
+  background:radial-gradient(1200px 600px at 80% -10%, color-mix(in oklab,var(--accent) 40%,transparent), transparent 60%),
+             radial-gradient(900px 500px at -10% 110%, color-mix(in oklab,var(--primary) 30%,transparent), transparent 55%)}
+h1,h2,h3,.h1,.val,.brand b{font-family:var(--font-head)}
+.muted{color:var(--muted)}
+a{color:inherit;text-decoration:none}
+hr{border:none;border-top:1px solid color-mix(in oklab,var(--ink) 12%,transparent)}
+
+/* lucide icons */
+i[data-lucide]{display:inline-flex;align-items:center;justify-content:center;vertical-align:-0.14em;flex:none}
+i[data-lucide] svg{width:100%;height:100%;display:block}
+.nav-item i[data-lucide]{width:17px;height:17px}
+.btn i[data-lucide]{width:15px;height:15px}
+.btn.icon i[data-lucide]{width:18px;height:18px}
+.ic-box i[data-lucide]{width:17px;height:17px}
+.badge i[data-lucide]{width:12px;height:12px}
+.note i[data-lucide]{width:15px;height:15px}
+.tsearch i[data-lucide],.isearch i[data-lucide]{width:15px;height:15px}
+.company i[data-lucide],.sfoot i[data-lucide]{width:15px;height:15px}
+
+/* layout */
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh;position:relative;z-index:1}
+aside{border-right:1px solid color-mix(in oklab,var(--ink) 12%,transparent);background:var(--surface);position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid color-mix(in oklab,var(--ink) 12%,transparent)}
+.brand .logo{width:32px;height:32px;border-radius:9px;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700}
+.brand .logo i[data-lucide]{width:18px;height:18px}
+.brand b{font-size:16px}
+.company{margin:12px;padding:9px 10px;border:1px solid color-mix(in oklab,var(--ink) 12%,transparent);border-radius:10px;display:flex;align-items:center;gap:9px;font-size:13px;cursor:pointer}
+.company:hover{background:color-mix(in oklab,var(--ink) 4%,var(--bg))}
+nav{padding:6px 12px;overflow:auto;flex:1}
+.nav-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:12px 8px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;color:var(--muted);cursor:pointer;font-weight:500;margin-bottom:2px}
+.nav-item:hover{background:color-mix(in oklab,var(--ink) 5%,var(--bg));color:var(--ink)}
+.nav-item.active{background:color-mix(in oklab,var(--accent) 14%,var(--bg));color:var(--ink)}
+.nav-item.active i[data-lucide]{color:var(--accent)}
+.nav-item .cnt{margin-left:auto;font-size:11px}
+.sfoot{border-top:1px solid color-mix(in oklab,var(--ink) 12%,transparent);padding:10px 12px;display:flex;align-items:center;gap:10px}
+
+main{display:flex;flex-direction:column;min-width:0}
+.topbar{height:56px;border-bottom:1px solid color-mix(in oklab,var(--ink) 12%,transparent);display:flex;align-items:center;gap:12px;padding:0 18px;position:sticky;top:0;background:color-mix(in oklab,var(--bg) 85%,transparent);backdrop-filter:blur(8px);z-index:20}
+.menu-btn{display:none}
+.crumb{font-size:13px;color:var(--muted)}
+.crumb b{color:var(--ink)}
+.tsearch{margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid color-mix(in oklab,var(--ink) 12%,transparent);border-radius:9px;padding:7px 10px;width:240px;color:var(--muted)}
+.tsearch input{border:none;outline:none;background:transparent;width:100%;color:var(--ink);font-size:13px}
+.content{padding:calc(24px * var(--density,1));max-width:1280px;width:100%}
+.page{display:none}.page.show{display:block;animation:fade .2s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+.h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.psub{color:var(--muted);margin-top:4px}
+
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:9px;font-size:13px;font-weight:500;border:1px solid transparent;cursor:pointer;background:var(--primary);color:var(--on-primary);white-space:nowrap}
+.btn:hover{opacity:.9}
+.btn.outline{background:transparent;border-color:color-mix(in oklab,var(--ink) 14%,transparent);color:var(--ink)}
+.btn.outline:hover{background:color-mix(in oklab,var(--ink) 5%,var(--bg))}
+.btn.ghost{background:transparent;color:var(--ink)}.btn.ghost:hover{background:color-mix(in oklab,var(--ink) 6%,var(--bg))}
+.btn.acc{background:var(--accent);color:var(--on-accent)}
+.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.btn.icon{width:36px;padding:0;justify-content:center}
+
+.card{border:1px solid color-mix(in oklab,var(--ink) 12%,transparent);border-radius:14px;background:var(--surface)}
+.card-h{padding:calc(18px * var(--density,1)) calc(18px * var(--density,1)) 0}
+.card-b{padding:calc(18px * var(--density,1))}
+.card-t{font-weight:600;font-size:15px}
+.card-d{color:var(--muted);font-size:13px;margin-top:2px}
+
+.grid{display:grid;gap:calc(16px * var(--density,1))}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1080px){.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.g4,.g3,.g2{grid-template-columns:1fr}.span2{grid-column:auto !important}}
+.span2{grid-column:span 2}
+
+.stat .card-b{display:flex;flex-direction:column;gap:6px}
+.stat .row{display:flex;align-items:center;justify-content:space-between}
+.stat .label{font-size:13px;color:var(--muted);font-weight:500}
+.stat .val{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.ic-box{width:34px;height:34px;border-radius:9px;display:grid;place-items:center}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;line-height:1.7;border:1px solid transparent}
+.badge .dotb{width:7px;height:7px;border-radius:999px;background:currentColor}
+.b-ok{background:color-mix(in oklab,var(--ok) 14%,var(--bg));color:var(--ok)}
+.b-warn{background:color-mix(in oklab,var(--warn) 16%,var(--bg));color:var(--warn)}
+.b-err{background:color-mix(in oklab,var(--err) 13%,var(--bg));color:var(--err)}
+.b-info{background:color-mix(in oklab,var(--info) 12%,var(--bg));color:var(--info)}
+.b-acc{background:color-mix(in oklab,var(--accent) 15%,var(--bg));color:var(--accent)}
+.b-gray{background:color-mix(in oklab,var(--ink) 7%,var(--bg));color:var(--muted)}
+.b-outline{background:transparent;border-color:color-mix(in oklab,var(--ink) 14%,transparent);color:var(--ink)}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--muted);padding:10px 14px;border-bottom:1px solid color-mix(in oklab,var(--ink) 12%,transparent);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid color-mix(in oklab,var(--ink) 10%,transparent);vertical-align:middle}
+tbody tr:hover{background:color-mix(in oklab,var(--ink) 3%,var(--bg))}
+tbody tr:last-child td{border-bottom:none}
+.tablewrap{overflow-x:auto}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.avatar{width:28px;height:28px;border-radius:999px;background:color-mix(in oklab,var(--accent) 16%,var(--bg));color:var(--accent);display:inline-grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.cellname{display:flex;align-items:center;gap:9px}
+
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.input,.select{height:36px;border:1px solid color-mix(in oklab,var(--ink) 14%,transparent);border-radius:9px;padding:0 12px;background:var(--surface);color:var(--ink);font-size:13px;outline:none}
+.input:focus,.select:focus{border-color:var(--accent)}
+.isearch{display:flex;align-items:center;gap:8px;border:1px solid color-mix(in oklab,var(--ink) 14%,transparent);border-radius:9px;padding:0 10px;height:36px;color:var(--muted);min-width:200px;flex:1}
+.isearch input{border:none;outline:none;background:transparent;color:var(--ink);font-size:13px;width:100%}
+
+.tabs{display:inline-flex;background:color-mix(in oklab,var(--ink) 6%,var(--bg));padding:4px;border-radius:10px;gap:2px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}
+.tab.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px color-mix(in oklab,var(--ink) 14%,transparent)}
+
+.barwrap{height:8px;background:color-mix(in oklab,var(--ink) 8%,var(--bg));border-radius:999px;overflow:hidden}
+.bar{height:100%;border-radius:999px}
+
+.timeline{position:relative;padding-left:22px}
+.timeline:before{content:"";position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:color-mix(in oklab,var(--ink) 12%,transparent)}
+.tl{position:relative;padding:0 0 18px}
+.tl:last-child{padding-bottom:0}
+.tl:before{content:"";position:absolute;left:-21px;top:3px;width:12px;height:12px;border-radius:999px;background:var(--bg);border:2px solid var(--accent)}
+.tl .when{font-size:12px;color:var(--muted)}
+.tl .what{font-weight:500;margin:2px 0}
+
+.field{margin-bottom:16px}
+.lab{display:block;font-size:13px;font-weight:500;margin-bottom:6px}
+.field .input,.field .select{width:100%}
+.help{font-size:12px;color:var(--muted);margin-top:5px}
+
+.dropzone{border:1.5px dashed color-mix(in oklab,var(--ink) 18%,transparent);border-radius:12px;padding:34px;text-align:center;color:var(--muted);background:color-mix(in oklab,var(--ink) 3%,var(--bg))}
+.dropzone i[data-lucide]{width:30px;height:30px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid color-mix(in oklab,var(--ink) 9%,transparent);font-size:13px}
+.kv:last-child{border:none}.kv span:first-child{color:var(--muted)}
+.legend{display:flex;align-items:center;gap:7px;font-size:13px}
+.dot{width:9px;height:9px;border-radius:3px;flex:none}
+.pag{display:flex;align-items:center;justify-content:space-between;padding:14px;font-size:13px;color:var(--muted);flex-wrap:wrap;gap:10px}
+.note{font-size:12px;color:var(--muted);background:color-mix(in oklab,var(--ink) 4%,var(--bg));border:1px solid color-mix(in oklab,var(--ink) 10%,transparent);border-radius:9px;padding:8px 12px;display:flex;gap:8px;align-items:center}
+.qr{width:128px;height:128px;border:1px solid color-mix(in oklab,var(--ink) 12%,transparent);border-radius:10px;background:color-mix(in oklab,var(--ink) 3%,var(--bg));display:grid;place-items:center}
+
+/* asset card (self-service) */
+.acard{border:1px solid color-mix(in oklab,var(--ink) 12%,transparent);border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.acard .thumb{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:color-mix(in oklab,var(--accent) 12%,var(--bg));color:var(--accent);flex:none}
+.acard .thumb i[data-lucide]{width:20px;height:20px}
+
+/* modal dialog */
+.modal-ov{display:none;position:fixed;inset:0;background:color-mix(in oklab,var(--ink) 45%,transparent);z-index:60;align-items:center;justify-content:center;padding:20px}
+.modal-ov.show{display:flex}
+.modal{background:var(--surface);border:1px solid color-mix(in oklab,var(--ink) 12%,transparent);border-radius:14px;width:100%;max-width:440px;box-shadow:0 24px 60px color-mix(in oklab,var(--ink) 32%,transparent);animation:pop .15s ease}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.modal-h{padding:18px 18px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.modal-b{padding:16px 18px}
+.modal-f{padding:0 18px 18px;display:flex;gap:8px;justify-content:flex-end}
+
+.overlay{display:none;position:fixed;inset:0;background:color-mix(in oklab,var(--ink) 35%,transparent);z-index:40}
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}
+  aside{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .2s ease;z-index:50;width:248px}
+  aside.open{transform:none}
+  .overlay.show{display:block}
+  .menu-btn{display:inline-flex}
+  .tsearch{display:none}
+  .hide-sm{display:none !important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="overlay" id="ov" onclick="closeNav()"></div>
+  <aside id="side">
+    <div class="brand"><div class="logo"><i data-lucide="tag"></i></div><b>Tagged</b><span class="badge b-outline" style="margin-left:auto;font-size:10px">v1.0</span></div>
+    <div class="company" style="overflow:hidden">
+      <div class="avatar" style="background:var(--primary);color:var(--on-primary)">R</div>
+      <select class="select" title="Pilih company — laporan tidak tercampur antar PT" style="border:none;background:transparent;flex:1;min-width:0;width:100%;max-width:100%;height:auto;padding:0;font-weight:600;font-size:13px;outline:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        <option value="all">Semua Company</option>
+        <option title="PT Realfood Karya Indonesia">RKI · Realfood Karya Indonesia</option>
+        <option title="PT Realfood Winta Asia">RWA · Realfood Winta Asia</option>
+        <option title="PT Abadi Lestari Indonesia Tbk">ALI · Abadi Lestari Indonesia</option>
+        <option title="PT Eling Janji Pertama">EJP · Eling Janji Pertama</option>
+        <option title="PT Hidup Melawan Waktu">HMW · Hidup Melawan Waktu</option>
+      </select>
+    </div>
+    <nav>
+      <div class="nav-label">Umum</div>
+      <div class="nav-item active" data-id="dashboard" onclick="go('dashboard',this)"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+      <div class="nav-item" data-id="assets" onclick="go('assets',this)"><i data-lucide="package"></i> Daftar Aset <span class="badge b-gray cnt">342</span></div>
+      <div class="nav-item" data-id="detail" onclick="go('detail',this)"><i data-lucide="file-text"></i> Detail Aset</div>
+      <div class="nav-item" data-id="cug" onclick="go('cug',this)"><i data-lucide="smartphone"></i> Kartu CUG <span class="badge b-gray cnt">88</span></div>
+      <div class="nav-label">Operasional</div>
+      <div class="nav-item" data-id="handover" onclick="go('handover',this)"><i data-lucide="arrow-left-right"></i> Serah-Terima</div>
+      <div class="nav-item" data-id="mutasi" onclick="go('mutasi',this)"><i data-lucide="git-branch"></i> Mutasi &amp; Approval <span class="badge b-warn cnt">4</span></div>
+      <div class="nav-item" data-id="maintenance" onclick="go('maintenance',this)"><i data-lucide="wrench"></i> Maintenance <span class="badge b-warn cnt">5</span></div>
+      <div class="nav-item" data-id="loan" onclick="go('loan',this)"><i data-lucide="clock"></i> Peminjaman <span class="badge b-warn cnt">2</span></div>
+      <div class="nav-item" data-id="opname" onclick="go('opname',this)"><i data-lucide="clipboard-check"></i> Stock Opname</div>
+      <div class="nav-item" data-id="disposal" onclick="go('disposal',this)"><i data-lucide="trash-2"></i> Disposal</div>
+      <div class="nav-label">Data</div>
+      <div class="nav-item" data-id="import" onclick="go('import',this)"><i data-lucide="upload"></i> Import CSV</div>
+      <div class="nav-item" data-id="reports" onclick="go('reports',this)"><i data-lucide="bar-chart-3"></i> Laporan</div>
+      <div class="nav-label">Karyawan</div>
+      <div class="nav-item" data-id="self" onclick="go('self',this)"><i data-lucide="user"></i> Aset Saya</div>
+      <div class="nav-label">Sistem</div>
+      <div class="nav-item" data-id="sites" onclick="go('sites',this)"><i data-lucide="map-pin"></i> Site &amp; Lokasi <span class="badge b-gray cnt">9</span></div>
+      <div class="nav-item" data-id="settings" onclick="go('settings',this)"><i data-lucide="settings"></i> Pengaturan &amp; RBAC</div>
+    </nav>
+    <div class="sfoot"><div class="avatar">WB</div><div style="line-height:1.2;flex:1"><div style="font-weight:600;font-size:13px">Webmaster</div><div class="muted" style="font-size:11px">Super Admin</div></div><i data-lucide="log-out" class="muted"></i></div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <button class="btn ghost icon menu-btn" onclick="openNav()"><i data-lucide="panel-left"></i></button>
+      <div class="crumb">Tagged / <b id="crumb">Dashboard</b></div>
+      <select class="select hide-sm" style="margin-left:auto;max-width:210px" title="Pilih site / sub-site">
+        <option>📍 Semua Site &amp; Sub-site</option>
+        <optgroup label="Bojonegoro"><option>Realfood Mulyoagung</option><option>Realfood CS Gofun</option><option>Abadi Lestari Indonesia Balen</option><option>Realfood Abon</option><option>Realfood Gudang Bentol</option></optgroup>
+        <optgroup label="Surabaya"><option>Realco Surabaya Spazio</option></optgroup>
+        <optgroup label="Jakarta"><option>Realco Hub Palmera</option><option>Realco Gudang Kemunging</option></optgroup>
+        <optgroup label="Yogyakarta"><option>Realco WorkHub Yogyakarta</option></optgroup>
+      </select>
+      <div class="tsearch" style="margin-left:0"><i data-lucide="search"></i><input placeholder="Cari aset, nomor CUG, karyawan…"><span class="badge b-outline" style="font-size:10px">⌘K</span></div>
+      <button class="btn ghost icon" onclick="toggleTheme()" title="Ganti tema terang/gelap"><i data-lucide="moon" id="themeIcon"></i></button>
+      <button class="btn ghost icon"><i data-lucide="bell"></i></button>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="page show" id="dashboard">
+        <div class="page-head">
+          <div><div class="h1">Dashboard</div><div class="psub">Ringkasan aset &amp; aktivitas — RKI · Juni 2026</div></div>
+          <div style="display:flex;gap:8px"><button class="btn outline"><i data-lucide="calendar"></i> Juni 2026</button><button class="btn" onclick="go('addasset')"><i data-lucide="plus"></i> Tambah Aset</button></div>
+        </div>
+        <div class="grid g4">
+          <div class="card stat"><div class="card-b"><div class="row"><span class="label">Total Aset</span><span class="ic-box" style="background:color-mix(in oklab,var(--info) 12%,var(--bg));color:var(--info)"><i data-lucide="package"></i></span></div><span class="val">342</span><span class="badge b-ok"><i data-lucide="trending-up"></i> +12 bulan ini</span></div></div>
+          <div class="card stat"><div class="card-b"><div class="row"><span class="label">Sedang Digunakan</span><span class="ic-box" style="background:color-mix(in oklab,var(--ok) 12%,var(--bg));color:var(--ok)"><i data-lucide="user-check"></i></span></div><span class="val">281</span><span class="muted" style="font-size:12px">82% dari total</span></div></div>
+          <div class="card stat"><div class="card-b"><div class="row"><span class="label">Kartu CUG Aktif</span><span class="ic-box" style="background:color-mix(in oklab,var(--accent) 14%,var(--bg));color:var(--accent)"><i data-lucide="smartphone"></i></span></div><span class="val">88</span><span class="muted" style="font-size:12px">Combo A 34 · B 29 · Non 25</span></div></div>
+          <div class="card stat"><div class="card-b"><div class="row"><span class="label">Perlu Perhatian</span><span class="ic-box" style="background:color-mix(in oklab,var(--warn) 16%,var(--bg));color:var(--warn)"><i data-lucide="alert-triangle"></i></span></div><span class="val">9</span><span class="badge b-warn">5 maintenance · 4 garansi</span></div></div>
+        </div>
+
+        <div class="grid g3" style="margin-top:16px">
+          <div class="card span2">
+            <div class="card-h"><div class="card-t">Aset per Kategori</div><div class="card-d">Distribusi 342 aset</div></div>
+            <div class="card-b">
+              <svg viewBox="0 0 520 180" width="100%" height="180" font-family="Inter" font-size="12">
+                <g fill="var(--muted)"><text x="0" y="24">Laptop</text><text x="0" y="64">HP</text><text x="0" y="104">Kartu CUG</text><text x="0" y="144">Tablet</text></g>
+                <g><rect x="90" y="10" width="324" height="20" rx="5" fill="var(--info)"></rect><rect x="90" y="50" width="225" height="20" rx="5" fill="var(--ok)"></rect><rect x="90" y="90" width="234" height="20" rx="5" fill="var(--accent)"></rect><rect x="90" y="130" width="117" height="20" rx="5" fill="var(--warn)"></rect></g>
+                <g fill="var(--ink)" font-weight="600"><text x="424" y="25">124</text><text x="325" y="65">86</text><text x="334" y="105">88</text><text x="217" y="145">44</text></g>
+              </svg>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="card-t">Status Aset</div><div class="card-d">Real-time</div></div>
+            <div class="card-b" style="display:flex;align-items:center;gap:14px">
+              <svg viewBox="0 0 120 120" width="118" height="118">
+                <circle cx="60" cy="60" r="48" fill="none" stroke="color-mix(in oklab,var(--ink) 8%,var(--bg))" stroke-width="20"></circle>
+                <circle cx="60" cy="60" r="48" fill="none" stroke="var(--ok)" stroke-width="20" stroke-dasharray="247 301" transform="rotate(-90 60 60)"></circle>
+                <circle cx="60" cy="60" r="48" fill="none" stroke="var(--info)" stroke-width="20" stroke-dasharray="41 301" stroke-dashoffset="-247" transform="rotate(-90 60 60)"></circle>
+                <circle cx="60" cy="60" r="48" fill="none" stroke="var(--warn)" stroke-width="20" stroke-dasharray="5 301" stroke-dashoffset="-288" transform="rotate(-90 60 60)"></circle>
+                <circle cx="60" cy="60" r="48" fill="none" stroke="var(--err)" stroke-width="20" stroke-dasharray="6 301" stroke-dashoffset="-293" transform="rotate(-90 60 60)"></circle>
+                <text x="60" y="58" text-anchor="middle" font-family="Inter Tight" font-size="22" font-weight="700" fill="var(--ink)">342</text>
+                <text x="60" y="74" text-anchor="middle" font-size="10" fill="var(--muted)">aset</text>
+              </svg>
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                <div class="kv" style="padding:4px 0"><span class="legend"><span class="dot" style="background:var(--ok)"></span>Digunakan</span><b>281</b></div>
+                <div class="kv" style="padding:4px 0"><span class="legend"><span class="dot" style="background:var(--info)"></span>Tersedia</span><b>47</b></div>
+                <div class="kv" style="padding:4px 0"><span class="legend"><span class="dot" style="background:var(--warn)"></span>Maintenance</span><b>5</b></div>
+                <div class="kv" style="padding:4px 0"><span class="legend"><span class="dot" style="background:var(--err)"></span>Rusak</span><b>6</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g2" style="margin-top:16px">
+          <div class="card">
+            <div class="card-h" style="display:flex;justify-content:space-between;align-items:center"><div><div class="card-t">Aktivitas Terbaru</div><div class="card-d">Audit trail</div></div><button class="btn ghost sm">Lihat semua</button></div>
+            <div class="card-b"><div class="timeline">
+              <div class="tl"><div class="when">Hari ini · 09:24</div><div class="what">Serah-terima <b>Laptop Lenovo T14</b> → Andi Saputra</div><span class="badge b-ok"><i data-lucide="check"></i> BAST #00231</span></div>
+              <div class="tl"><div class="when">Kemarin · 16:10</div><div class="what">Ganti paket CUG <b>0811-2345-678</b>: Non Paket → Combo A</div><span class="badge b-acc">CUG</span></div>
+              <div class="tl"><div class="when">Kemarin · 11:02</div><div class="what">Tiket maintenance <b>HP Samsung A54</b> dibuka</div><span class="badge b-warn">Maintenance</span></div>
+              <div class="tl"><div class="when">16 Jun · 14:30</div><div class="what">Import CSV 24 aset baru (batch #B-0098)</div><span class="badge b-info">Import</span></div>
+            </div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="card-t">Reminder &amp; Jatuh Tempo</div><div class="card-d">Garansi · pinjaman · tagihan CUG</div></div>
+            <div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+              <div class="note"><i data-lucide="shield-alert" style="color:var(--warn)"></i><span><b>4 perangkat</b> garansi berakhir &lt; 30 hari</span></div>
+              <div class="note"><i data-lucide="smartphone" style="color:var(--accent)"></i><span>Tagihan CUG bulan ini <b>Rp 9.840.000</b> (88 nomor)</span></div>
+              <div class="note"><i data-lucide="clock" style="color:var(--info)"></i><span><b>2 aset pinjaman</b> jatuh tempo minggu ini</span></div>
+              <div class="note"><i data-lucide="clipboard-check" style="color:var(--ok)"></i><span>Stock opname Gudang IT terjadwal <b>25 Jun</b></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DAFTAR ASET -->
+      <section class="page" id="assets">
+        <div class="page-head"><div><div class="h1">Daftar Aset</div><div class="psub">342 aset · tablet, HP, laptop &amp; kartu CUG</div></div><div style="display:flex;gap:8px"><button class="btn outline"><i data-lucide="download"></i> Export</button><button class="btn" onclick="go('addasset')"><i data-lucide="plus"></i> Tambah Aset</button></div></div>
+        <div class="toolbar">
+          <div class="isearch"><i data-lucide="search"></i><input placeholder="Cari kode / nama / serial…"></div>
+          <select class="select"><option>Semua Kategori</option><option>Laptop</option><option>HP</option><option>Tablet</option><option>Kartu CUG</option></select>
+          <select class="select"><option>Semua Status</option><option>Digunakan</option><option>Tersedia</option><option>Maintenance</option></select>
+          <select class="select"><option>Semua Site &amp; Sub-site</option><optgroup label="Bojonegoro"><option>Realfood Mulyoagung</option><option>Realfood CS Gofun</option><option>Abadi Lestari Indonesia Balen</option><option>Realfood Abon</option><option>Realfood Gudang Bentol</option></optgroup><optgroup label="Surabaya"><option>Realco Surabaya Spazio</option></optgroup><optgroup label="Jakarta"><option>Realco Hub Palmera</option><option>Realco Gudang Kemunging</option></optgroup><optgroup label="Yogyakarta"><option>Realco WorkHub Yogyakarta</option></optgroup></select>
+          <button class="btn outline sm"><i data-lucide="sliders-horizontal"></i> Filter</button>
+        </div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Kode</th><th>Aset</th><th>Kategori</th><th>Pemegang (PIC)</th><th>Lokasi</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">RKI-LT-2026-0118</td><td><b>Lenovo ThinkPad T14</b><div class="muted" style="font-size:12px">SN: PF3K9210</div></td><td><span class="badge b-info">Laptop</span></td><td><div class="cellname"><span class="avatar">AS</span> Andi Saputra</div></td><td>Realco Surabaya Spazio<div class="muted" style="font-size:12px">Surabaya</div></td><td><span class="badge b-ok"><span class="dotb"></span> Digunakan</span></td><td><button class="btn ghost sm" onclick="go('detail')">Detail</button></td></tr>
+            <tr><td class="mono">RKI-HP-2026-0086</td><td><b>Samsung Galaxy A54</b><div class="muted" style="font-size:12px">SN: R58T20XK</div><div style="margin-top:5px"><span class="badge b-acc"><i data-lucide="smartphone"></i> CUG 0815-3300-908</span></div></td><td><span class="badge b-ok">HP</span></td><td><div class="cellname"><span class="avatar">DW</span> Dewi Wulan</div></td><td>Realfood Mulyoagung<div class="muted" style="font-size:12px">Bojonegoro</div></td><td><span class="badge b-warn"><span class="dotb"></span> Maintenance</span></td><td><button class="btn ghost sm" onclick="go('detail')">Detail</button></td></tr>
+            <tr><td class="mono">RKI-TB-2026-0044</td><td><b>iPad 10th Gen</b><div class="muted" style="font-size:12px">SN: GH7L0021</div><div style="margin-top:5px"><span class="badge b-gray"><i data-lucide="link"></i> Belum ada CUG</span></div></td><td><span class="badge b-warn">Tablet</span></td><td class="muted">—</td><td>Realco Gudang Kemunging<div class="muted" style="font-size:12px">Jakarta</div></td><td><span class="badge b-info"><span class="dotb"></span> Tersedia</span></td><td><button class="btn ghost sm" onclick="go('detail')">Detail</button></td></tr>
+            <tr><td class="mono">RKI-CUG-0231</td><td><b>0811-2345-678</b><div class="muted" style="font-size:12px">Telkomsel · ICCID …8821</div></td><td><span class="badge b-acc">Kartu CUG</span></td><td><div class="cellname"><span class="avatar">BS</span> Budi Santoso</div></td><td>Realco Hub Palmera<div class="muted" style="font-size:12px">Jakarta</div></td><td><span class="badge b-ok"><span class="dotb"></span> Aktif · Combo A</span></td><td><button class="btn ghost sm" onclick="go('cug')">Detail</button></td></tr>
+            <tr><td class="mono">RKI-LT-2026-0117</td><td><b>HP EliteBook 840</b><div class="muted" style="font-size:12px">SN: 5CD210KP</div></td><td><span class="badge b-info">Laptop</span></td><td><div class="cellname"><span class="avatar">RM</span> Rina Marlina</div></td><td>Realco WorkHub Yogyakarta<div class="muted" style="font-size:12px">Yogyakarta</div></td><td><span class="badge b-ok"><span class="dotb"></span> Digunakan</span></td><td><button class="btn ghost sm" onclick="go('detail')">Detail</button></td></tr>
+            <tr><td class="mono">RKI-HP-2026-0085</td><td><b>iPhone 13</b><div class="muted" style="font-size:12px">SN: DX3K88L1</div></td><td><span class="badge b-ok">HP</span></td><td class="muted">—</td><td>Realfood Gudang Bentol<div class="muted" style="font-size:12px">Bojonegoro</div></td><td><span class="badge b-err"><span class="dotb"></span> Rusak</span></td><td><button class="btn ghost sm" onclick="go('detail')">Detail</button></td></tr>
+          </tbody>
+        </table></div><div class="pag"><span>Menampilkan 1–6 dari 342 aset</span><div style="display:flex;gap:6px"><button class="btn outline sm">Sebelumnya</button><button class="btn outline sm">1</button><button class="btn sm">2</button><button class="btn outline sm">3</button><button class="btn outline sm">Berikutnya</button></div></div></div>
+      </section>
+
+      <!-- DETAIL -->
+      <section class="page" id="detail">
+        <div class="page-head">
+          <div><div class="crumb" style="margin-bottom:6px"><a onclick="go('assets')" style="cursor:pointer">← Daftar Aset</a></div><div class="h1">Lenovo ThinkPad T14</div><div class="psub"><span class="mono">RKI-LT-2026-0118</span> · <span class="badge b-info">Laptop</span> <span class="badge b-ok"><span class="dotb"></span> Digunakan</span></div></div>
+          <div style="display:flex;gap:8px"><button class="btn outline"><i data-lucide="qr-code"></i> Label QR</button><button class="btn outline"><i data-lucide="arrow-left-right"></i> Serah-Terima</button><button class="btn"><i data-lucide="pencil"></i> Edit</button></div>
+        </div>
+        <div class="tabs"><div class="tab active">Informasi</div><div class="tab">Riwayat</div><div class="tab">Maintenance</div><div class="tab">Dokumen</div></div>
+        <div class="grid g3">
+          <div class="card span2"><div class="card-h"><div class="card-t">Informasi Aset</div></div><div class="card-b grid g2" style="gap:0 32px">
+            <div><div class="kv"><span>Kode Aset</span><b class="mono">RKI-LT-2026-0118</b></div><div class="kv"><span>Merk / Model</span><b>Lenovo ThinkPad T14</b></div><div class="kv"><span>Serial Number</span><b class="mono">PF3K9210</b></div><div class="kv"><span>Kategori</span><b>Laptop</b></div><div class="kv"><span>Kondisi</span><b>Baik</b></div></div>
+            <div><div class="kv"><span>Pemegang (PIC)</span><b>Andi Saputra</b></div><div class="kv"><span>Departemen</span><b>IT</b></div><div class="kv"><span>Site</span><b>Surabaya</b></div><div class="kv"><span>Sub-site</span><b>Realco Surabaya Spazio</b></div><div class="kv"><span>Tgl Perolehan</span><b>12-01-2026</b></div><div class="kv"><span>Garansi s/d</span><b>12-01-2028</b></div></div>
+          </div></div>
+          <div class="card"><div class="card-h"><div class="card-t">QR / Label</div></div><div class="card-b" style="text-align:center">
+            <div class="qr" style="margin:0 auto 12px">
+              <svg width="92" height="92" viewBox="0 0 29 29" shape-rendering="crispEdges"><rect width="29" height="29" fill="transparent"/><g fill="var(--ink)"><rect x="0" y="0" width="7" height="7"/><rect x="2" y="2" width="3" height="3" fill="var(--bg)"/><rect x="22" y="0" width="7" height="7"/><rect x="24" y="2" width="3" height="3" fill="var(--bg)"/><rect x="0" y="22" width="7" height="7"/><rect x="2" y="24" width="3" height="3" fill="var(--bg)"/><rect x="10" y="2" width="2" height="2"/><rect x="14" y="4" width="2" height="2"/><rect x="18" y="2" width="2" height="2"/><rect x="9" y="9" width="2" height="2"/><rect x="13" y="9" width="3" height="2"/><rect x="19" y="9" width="2" height="2"/><rect x="9" y="13" width="2" height="3"/><rect x="16" y="14" width="3" height="2"/><rect x="22" y="13" width="2" height="2"/><rect x="11" y="18" width="2" height="2"/><rect x="15" y="19" width="2" height="2"/><rect x="20" y="18" width="3" height="3"/><rect x="13" y="23" width="2" height="2"/><rect x="18" y="24" width="2" height="2"/><rect x="23" y="22" width="2" height="3"/></g></svg>
+            </div>
+            <div class="muted" style="font-size:12px">Scan untuk lihat detail / lapor</div><button class="btn outline sm" style="margin-top:10px"><i data-lucide="printer"></i> Cetak Label</button>
+          </div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><div class="card-t"><i data-lucide="smartphone" style="width:15px;vertical-align:-2px"></i> Kartu CUG Terpasang</div><div class="card-d">Khusus perangkat HP &amp; Tablet — satu perangkat dapat dikaitkan dengan satu nomor CUG</div></div><button class="btn outline sm" onclick="openCug()"><i data-lucide="link"></i> Pasang / Ganti Kartu CUG</button></div>
+          <div class="card-b"><div class="tablewrap"><table>
+            <thead><tr><th>Nomor CUG</th><th>Operator</th><th>Paket</th><th>Biaya/bln</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><b class="mono" id="detCugNo">0815-3300-908</b><div class="muted" style="font-size:12px">ICCID …2245</div></td><td id="detCugOp">Indosat</td><td><span class="badge b-info" id="detCugPaket">Combo B</span></td><td id="detCugBiaya">Rp 100.000</td><td><span class="badge b-ok"><span class="dotb"></span> Aktif</span></td><td><button class="btn ghost sm"><i data-lucide="unlink"></i> Lepas</button></td></tr>
+            </tbody>
+          </table></div><div class="note" style="margin-top:12px"><i data-lucide="info"></i><span>Untuk <b>Laptop</b>, panel ini tidak muncul (CUG hanya untuk HP &amp; Tablet). Pelepasan kartu mengembalikan status CUG ke <b>Tersedia</b>.</span></div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><div class="card-h"><div class="card-t">Riwayat Aset (Audit Trail)</div><div class="card-d">Immutable — tidak dapat diubah/dihapus</div></div><div class="card-b"><div class="timeline">
+          <div class="tl"><div class="when">10-06-2026 · 09:24 · oleh Webmaster</div><div class="what">Serah-terima ke Andi Saputra (BAST #00231)</div></div>
+          <div class="tl"><div class="when">02-05-2026 · 13:00 · oleh Admin IT</div><div class="what">Maintenance: ganti baterai (biaya Rp 850.000)</div></div>
+          <div class="tl"><div class="when">12-01-2026 · 10:15 · oleh Admin IT</div><div class="what">Registrasi aset + generate label QR</div></div>
+        </div></div></div>
+      </section>
+
+      <!-- CUG -->
+      <section class="page" id="cug">
+        <div class="page-head"><div><div class="h1">Kartu CUG</div><div class="psub">88 nomor korporat · paket Combo A / Combo B / Non Paket</div></div><div style="display:flex;gap:8px"><button class="btn outline"><i data-lucide="upload"></i> Import CUG</button><button class="btn"><i data-lucide="plus"></i> Tambah Kartu</button></div></div>
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="card stat"><div class="card-b"><span class="label">Total Nomor</span><span class="val">88</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Combo A</span><span class="val">34</span><span class="badge b-acc">Rp 150rb/bln</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Combo B</span><span class="val">29</span><span class="badge b-info">Rp 100rb/bln</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Non Paket</span><span class="val">25</span><span class="badge b-gray">pay-as-use</span></div></div>
+        </div>
+        <div class="toolbar">
+          <div class="isearch"><i data-lucide="search"></i><input placeholder="Cari nomor / pemegang…"></div>
+          <select class="select"><option>Semua Paket</option><option>Combo A</option><option>Combo B</option><option>Non Paket</option></select>
+          <select class="select"><option>Semua Operator</option><option>Telkomsel</option><option>XL</option><option>Indosat</option></select>
+        </div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Nomor CUG</th><th>Operator</th><th>Paket</th><th>Pemegang</th><th>Terpasang di</th><th>Biaya/bln</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><b class="mono">0811-2345-678</b><div class="muted" style="font-size:12px">ICCID …8821</div></td><td>Telkomsel</td><td><span class="badge b-acc">Combo A</span></td><td><div class="cellname"><span class="avatar">BS</span> Budi Santoso</div></td><td><span class="badge b-outline"><i data-lucide="smartphone"></i> Samsung A52</span><div class="muted mono" style="font-size:11px;margin-top:3px">RKI-HP-2026-0072</div></td><td>Rp 150.000</td><td><span class="badge b-ok"><span class="dotb"></span> Aktif</span></td><td><button class="btn ghost sm"><i data-lucide="repeat"></i> Ganti Paket</button></td></tr>
+            <tr><td><b class="mono">0812-9988-100</b><div class="muted" style="font-size:12px">ICCID …4410</div></td><td>Telkomsel</td><td><span class="badge b-info">Combo B</span></td><td><div class="cellname"><span class="avatar">RM</span> Rina Marlina</div></td><td><span class="badge b-outline"><i data-lucide="tablet"></i> iPad Air</span><div class="muted mono" style="font-size:11px;margin-top:3px">RKI-TB-2026-0031</div></td><td>Rp 100.000</td><td><span class="badge b-ok"><span class="dotb"></span> Aktif</span></td><td><button class="btn ghost sm"><i data-lucide="repeat"></i> Ganti Paket</button></td></tr>
+            <tr><td><b class="mono">0813-5512-777</b><div class="muted" style="font-size:12px">ICCID …9120</div></td><td>XL</td><td><span class="badge b-gray">Non Paket</span></td><td><div class="cellname"><span class="avatar">AS</span> Andi Saputra</div></td><td><span class="badge b-gray"><i data-lucide="link"></i> Belum dipasang</span></td><td class="muted">pay-as-use</td><td><span class="badge b-ok"><span class="dotb"></span> Aktif</span></td><td><button class="btn ghost sm"><i data-lucide="repeat"></i> Ganti Paket</button></td></tr>
+            <tr><td><b class="mono">0811-7001-225</b><div class="muted" style="font-size:12px">ICCID …7781</div></td><td>Telkomsel</td><td><span class="badge b-acc">Combo A</span></td><td class="muted">— (belum dipakai)</td><td class="muted">—</td><td>Rp 150.000</td><td><span class="badge b-info"><span class="dotb"></span> Tersedia</span></td><td><button class="btn ghost sm"><i data-lucide="user-plus"></i> Assign</button></td></tr>
+            <tr><td><b class="mono">0815-3300-908</b><div class="muted" style="font-size:12px">ICCID …2245</div></td><td>Indosat</td><td><span class="badge b-info">Combo B</span></td><td><div class="cellname"><span class="avatar">DW</span> Dewi Wulan</div></td><td><span class="badge b-outline"><i data-lucide="smartphone"></i> Samsung A54</span><div class="muted mono" style="font-size:11px;margin-top:3px">RKI-HP-2026-0086</div></td><td>Rp 100.000</td><td><span class="badge b-err"><span class="dotb"></span> Diblokir</span></td><td><button class="btn ghost sm">Detail</button></td></tr>
+          </tbody>
+        </table></div><div class="pag"><span>1–5 dari 88 nomor · Total tagihan bulan ini <b>Rp 9.840.000</b></span><div style="display:flex;gap:6px"><button class="btn outline sm">Sebelumnya</button><button class="btn outline sm">Berikutnya</button></div></div></div>
+      </section>
+
+      <!-- HANDOVER -->
+      <section class="page" id="handover">
+        <div class="page-head"><div><div class="h1">Serah-Terima Aset</div><div class="psub">Buat penugasan aset + generate BAST otomatis</div></div></div>
+        <div class="grid g3">
+          <div class="card span2"><div class="card-h"><div class="card-t">Form Serah-Terima</div><div class="card-d">BAST akan dibuat otomatis sebagai PDF</div></div><div class="card-b">
+            <div class="grid g2">
+              <div class="field"><label class="lab">Aset</label><select class="select"><option>RKI-TB-2026-0044 · iPad 10th Gen (Tersedia)</option><option>RKI-HP-2026-0085 · iPhone 13</option></select><div class="help">Hanya aset berstatus <b>Tersedia</b> yang tampil.</div></div>
+              <div class="field"><label class="lab">Karyawan (PIC)</label><select class="select"><option>Andi Saputra — IT</option><option>Dewi Wulan — Marketing</option></select></div>
+              <div class="field"><label class="lab">Lokasi Penempatan</label><select class="select"><optgroup label="Bojonegoro"><option>Realfood Mulyoagung</option><option>Realfood CS Gofun</option><option>Abadi Lestari Indonesia Balen</option><option>Realfood Abon</option><option>Realfood Gudang Bentol</option></optgroup><optgroup label="Surabaya"><option>Realco Surabaya Spazio</option></optgroup><optgroup label="Jakarta"><option>Realco Hub Palmera</option><option>Realco Gudang Kemunging</option></optgroup><optgroup label="Yogyakarta"><option>Realco WorkHub Yogyakarta</option></optgroup></select></div>
+              <div class="field"><label class="lab">Tanggal Serah-Terima</label><input class="input" value="18-06-2026"></div>
+              <div class="field"><label class="lab">Company</label><select class="select"><option>RKI — PT Realfood Karya Indonesia</option><option>RWA — PT Realfood Winta Asia</option><option>ALI — PT Abadi Lestari Indonesia Tbk</option><option>EJP — PT Eling Janji Pertama</option><option>HMW — PT Hidup Melawan Waktu</option></select></div>
+              <div class="field"><label class="lab">Kondisi saat diserahkan</label><select class="select"><option>Baru</option><option>Baik</option><option>Cukup</option></select></div>
+            </div>
+            <div class="field"><label class="lab">Catatan</label><input class="input" placeholder="mis. kelengkapan: charger, tas, dll"></div>
+            <hr style="margin:6px 0 16px">
+            <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn outline">Batal</button><button class="btn"><i data-lucide="file-check-2"></i> Buat &amp; Generate BAST</button></div>
+          </div></div>
+          <div class="card" style="height:fit-content"><div class="card-h"><div class="card-t">Pratinjau BAST</div><div class="card-d">Berita Acara Serah Terima</div></div><div class="card-b">
+            <div style="border:1px solid color-mix(in oklab,var(--ink) 12%,transparent);border-radius:10px;padding:16px;font-size:12px;line-height:1.7;background:color-mix(in oklab,var(--ink) 3%,var(--bg))">
+              <div style="text-align:center;font-weight:700;margin-bottom:8px">BERITA ACARA SERAH TERIMA<br><span class="muted" style="font-weight:400">No. BAST/RKI/06/2026/—</span></div>
+              <div class="kv"><span>Aset</span><b>iPad 10th Gen</b></div><div class="kv"><span>Kode</span><b class="mono">RKI-TB-2026-0044</b></div><div class="kv"><span>Penerima</span><b>Andi Saputra</b></div><div class="kv"><span>Tanggal</span><b>18-06-2026</b></div>
+              <div style="display:flex;justify-content:space-between;margin-top:18px;text-align:center"><div>Menyerahkan<br><br><span class="muted">(______)</span></div><div>Menerima<br><br><span class="muted">(______)</span></div></div>
+            </div>
+            <div class="note" style="margin-top:10px"><i data-lucide="info"></i><span>PDF tersimpan otomatis &amp; masuk timeline aset.</span></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- TAMBAH ASET (COMBINE CUG) -->
+      <section class="page" id="addasset">
+        <div class="page-head"><div><div class="crumb" style="margin-bottom:6px"><a onclick="go('assets')" style="cursor:pointer">← Daftar Aset</a></div><div class="h1">Tambah Aset</div><div class="psub">Daftarkan perangkat — untuk HP &amp; Tablet bisa langsung digabung dengan Kartu CUG</div></div></div>
+        <div class="grid g3">
+          <div class="card span2"><div class="card-h"><div class="card-t">Data Perangkat</div></div><div class="card-b">
+            <div class="grid g2">
+              <div class="field"><label class="lab">Kategori</label><select class="select" id="catSel" onchange="onCat()"><option value="hp">HP / Handphone</option><option value="tablet">Tablet</option><option value="laptop">Laptop</option></select><div class="help">Panel CUG hanya muncul untuk <b>HP</b> &amp; <b>Tablet</b>.</div></div>
+              <div class="field"><label class="lab">Merk / Model</label><input class="input" placeholder="mis. Samsung Galaxy A54"></div>
+              <div class="field"><label class="lab">Serial Number</label><input class="input" placeholder="SN / IMEI"></div>
+              <div class="field"><label class="lab">Kode Aset</label><input class="input" value="RKI-HP-2026-0092 (otomatis)" disabled></div>
+              <div class="field"><label class="lab">Tgl Perolehan</label><input class="input" value="18-06-2026"></div>
+              <div class="field"><label class="lab">Nilai Perolehan</label><input class="input" placeholder="Rp"></div>
+              <div class="field"><label class="lab">Lokasi</label><select class="select"><optgroup label="Bojonegoro"><option>Realfood Mulyoagung</option><option>Realfood CS Gofun</option><option>Abadi Lestari Indonesia Balen</option><option>Realfood Abon</option><option>Realfood Gudang Bentol</option></optgroup><optgroup label="Surabaya"><option>Realco Surabaya Spazio</option></optgroup><optgroup label="Jakarta"><option>Realco Hub Palmera</option><option>Realco Gudang Kemunging</option></optgroup><optgroup label="Yogyakarta"><option>Realco WorkHub Yogyakarta</option></optgroup></select></div>
+              <div class="field"><label class="lab">Pemegang (PIC)</label><select class="select"><option>— (Tersedia)</option><option>Andi Saputra — IT</option><option>Dewi Wulan — Marketing</option></select></div>
+              <div class="field"><label class="lab">Company</label><select class="select"><option>RKI — PT Realfood Karya Indonesia</option><option>RWA — PT Realfood Winta Asia</option><option>ALI — PT Abadi Lestari Indonesia Tbk</option><option>EJP — PT Eling Janji Pertama</option><option>HMW — PT Hidup Melawan Waktu</option></select></div>
+            </div>
+
+            <div id="cugPanel" style="border:1px solid color-mix(in oklab,var(--accent) 35%,transparent);border-radius:12px;padding:14px;background:color-mix(in oklab,var(--accent) 6%,var(--bg));margin-top:4px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px"><span class="ic-box" style="background:color-mix(in oklab,var(--accent) 16%,var(--bg));color:var(--accent)"><i data-lucide="smartphone"></i></span><div style="flex:1"><div style="font-weight:600">Gabungkan Kartu CUG</div><div class="muted" style="font-size:12px">Combine 1 nomor CUG ke perangkat ini</div></div>
+                <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="cugChk" checked onchange="onCug()"> Gabungkan</label></div>
+              <div id="cugFields" class="grid g2">
+                <div class="field" style="margin:0"><label class="lab">Nomor CUG (Tersedia)</label><select class="select" id="cugNo" onchange="onCug()"><option data-paket="Combo A" data-biaya="Rp 150.000" data-op="Telkomsel">0811-7001-225 · Telkomsel</option><option data-paket="Non Paket" data-biaya="pay-as-use" data-op="XL">0813-5512-777 · XL</option><option data-paket="Combo B" data-biaya="Rp 100.000" data-op="Indosat">0817-2200-410 · Indosat</option></select></div>
+                <div class="field" style="margin:0"><label class="lab">Paket</label><input class="input" id="cugPaket" value="Combo A" disabled></div>
+                <div class="field" style="margin:0"><label class="lab">Operator</label><input class="input" id="cugOp" value="Telkomsel" disabled></div>
+                <div class="field" style="margin:0"><label class="lab">Biaya / bln</label><input class="input" id="cugBiaya" value="Rp 150.000" disabled></div>
+              </div>
+            </div>
+
+            <hr style="margin:16px 0">
+            <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn outline">Batal</button><button class="btn"><i data-lucide="check"></i> Simpan Aset</button></div>
+          </div></div>
+
+          <div class="card" style="height:fit-content"><div class="card-h"><div class="card-t">Ringkasan Aset Gabungan</div><div class="card-d">Pratinjau sebelum disimpan</div></div><div class="card-b">
+            <div class="acard" style="background:color-mix(in oklab,var(--ink) 2%,var(--bg))"><div class="thumb" id="sumThumb"><i data-lucide="smartphone"></i></div><div style="flex:1"><div style="font-weight:600" id="sumName">HP / Handphone</div><div class="muted" style="font-size:12px"><span class="mono">RKI-HP-2026-0092</span></div><div style="margin-top:7px"><span class="badge b-info" id="sumCat">HP</span></div></div></div>
+            <div id="sumCugWrap" style="margin-top:10px">
+              <div class="muted" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">+ Kartu CUG digabung</div>
+              <div class="acard" style="background:color-mix(in oklab,var(--accent) 7%,var(--bg))"><div class="thumb"><i data-lucide="link"></i></div><div style="flex:1"><div style="font-weight:600" id="sumCugNo">0811-7001-225</div><div class="muted" style="font-size:12px"><span id="sumCugPaket">Combo A</span> · <span id="sumCugBiaya">Rp 150.000</span>/bln</div></div></div>
+            </div>
+            <div class="note" style="margin-top:12px"><i data-lucide="info"></i><span>1 BAST mencakup perangkat <b>+ kartu CUG</b>. Biaya CUG otomatis masuk rekap tagihan.</span></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- MUTASI & APPROVAL -->
+      <section class="page" id="mutasi">
+        <div class="page-head"><div><div class="h1">Mutasi &amp; Approval</div><div class="psub">Perpindahan lokasi / pemegang / company dengan persetujuan</div></div><button class="btn"><i data-lucide="plus"></i> Ajukan Mutasi</button></div>
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="card stat"><div class="card-b"><span class="label">Menunggu Approval</span><span class="val" style="color:var(--warn)">4</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Disetujui (bln ini)</span><span class="val" style="color:var(--ok)">12</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Ditolak</span><span class="val" style="color:var(--err)">1</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Total Mutasi (YTD)</span><span class="val">63</span></div></div>
+        </div>
+        <div class="tabs"><div class="tab active">Menunggu Approval (4)</div><div class="tab">Disetujui</div><div class="tab">Ditolak</div></div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>No.</th><th>Aset</th><th>Jenis</th><th>Dari → Ke</th><th>Pengaju</th><th>Approver</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">MUT-0042</td><td><b>Lenovo ThinkPad T14</b><div class="muted" style="font-size:12px">RKI-LT-2026-0118</div></td><td><span class="badge b-info">Pindah PIC</span></td><td>Andi Saputra → <b>Rina Marlina</b></td><td>Admin IT</td><td>Manager GA</td><td><span class="badge b-warn"><span class="dotb"></span> Menunggu</span></td><td><button class="btn ghost sm">Review</button></td></tr>
+            <tr><td class="mono">MUT-0041</td><td><b>iPad 10th Gen</b><div class="muted" style="font-size:12px">RKI-TB-2026-0044</div></td><td><span class="badge b-acc">Pindah Lokasi</span></td><td>Gudang IT → <b>Cabang Surabaya</b></td><td>Admin IT</td><td>Manager GA</td><td><span class="badge b-warn"><span class="dotb"></span> Menunggu</span></td><td><button class="btn ghost sm">Review</button></td></tr>
+            <tr><td class="mono">MUT-0040</td><td><b>HP EliteBook 840</b><div class="muted" style="font-size:12px">RKI-LT-2026-0117</div></td><td><span class="badge b-warn">Pindah Company</span></td><td>RKI → <b>HMW</b></td><td>Manager GA</td><td>Super Admin</td><td><span class="badge b-warn"><span class="dotb"></span> Menunggu</span></td><td><button class="btn ghost sm">Review</button></td></tr>
+            <tr><td class="mono">MUT-0039</td><td><b>Samsung A35</b><div class="muted" style="font-size:12px">RKI-HP-2026-0090</div></td><td><span class="badge b-info">Pindah PIC</span></td><td>Budi Santoso → <b>Dewi Wulan</b></td><td>Admin IT</td><td>Manager GA</td><td><span class="badge b-ok"><span class="dotb"></span> Disetujui</span></td><td><button class="btn ghost sm">Detail</button></td></tr>
+          </tbody>
+        </table></div><div class="pag"><span>1–4 dari 8 pengajuan</span><div style="display:flex;gap:6px"><button class="btn outline sm">Sebelumnya</button><button class="btn outline sm">Berikutnya</button></div></div></div>
+        <div class="grid g3" style="margin-top:16px">
+          <div class="card span2"><div class="card-h"><div class="card-t">Detail Pengajuan · MUT-0042</div><div class="card-d">Pindah PIC — Lenovo ThinkPad T14</div></div><div class="card-b grid g2" style="gap:0 32px">
+            <div><div class="kv"><span>Aset</span><b>Lenovo ThinkPad T14</b></div><div class="kv"><span>Kode</span><b class="mono">RKI-LT-2026-0118</b></div><div class="kv"><span>PIC Lama</span><b>Andi Saputra (IT)</b></div><div class="kv"><span>PIC Baru</span><b>Rina Marlina (Finance)</b></div></div>
+            <div><div class="kv"><span>Alasan</span><b>Rotasi tim</b></div><div class="kv"><span>Pengaju</span><b>Admin IT</b></div><div class="kv"><span>Tgl Pengajuan</span><b>18-06-2026</b></div><div class="kv"><span>BAST Baru</span><b>Otomatis saat disetujui</b></div></div>
+          </div></div>
+          <div class="card"><div class="card-h"><div class="card-t">Aksi Approval</div></div><div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+            <div class="note"><i data-lucide="info"></i><span>Setelah disetujui: lokasi/PIC diperbarui, BAST baru dibuat, &amp; tercatat di timeline aset.</span></div>
+            <div class="field" style="margin:0"><label class="lab">Catatan approver</label><input class="input" placeholder="opsional"></div>
+            <div style="display:flex;gap:8px"><button class="btn outline" style="flex:1;justify-content:center;border-color:color-mix(in oklab,var(--err) 40%,transparent);color:var(--err)"><i data-lucide="x"></i> Tolak</button><button class="btn" style="flex:1;justify-content:center"><i data-lucide="check"></i> Setujui</button></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- MAINTENANCE -->
+      <section class="page" id="maintenance">
+        <div class="page-head"><div><div class="h1">Maintenance</div><div class="psub">Tiket perbaikan &amp; jadwal preventif</div></div><button class="btn"><i data-lucide="plus"></i> Buat Tiket</button></div>
+        <div class="tabs"><div class="tab active">Aktif (5)</div><div class="tab">Preventif Terjadwal</div><div class="tab">Selesai</div></div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Tiket</th><th>Aset</th><th>Masalah</th><th>Teknisi/Vendor</th><th>Biaya</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">#MT-0051</td><td><b>Samsung Galaxy A54</b><div class="muted" style="font-size:12px">RKI-HP-2026-0086</div></td><td>Layar retak</td><td>Service Center XYZ</td><td>Rp 1.200.000</td><td><span class="badge b-warn"><span class="dotb"></span> Dikerjakan</span></td></tr>
+            <tr><td class="mono">#MT-0050</td><td><b>HP EliteBook 840</b><div class="muted" style="font-size:12px">RKI-LT-2026-0117</div></td><td>Keyboard error</td><td>Internal IT</td><td>—</td><td><span class="badge b-info"><span class="dotb"></span> Diagnosa</span></td></tr>
+            <tr><td class="mono">#MT-0049</td><td><b>iPhone 13</b><div class="muted" style="font-size:12px">RKI-HP-2026-0085</div></td><td>Mati total</td><td>—</td><td>—</td><td><span class="badge b-err"><span class="dotb"></span> Usul Disposal</span></td></tr>
+          </tbody>
+        </table></div></div>
+      </section>
+
+      <!-- PEMINJAMAN -->
+      <section class="page" id="loan">
+        <div class="page-head"><div><div class="h1">Peminjaman (Loan)</div><div class="psub">Peminjaman aset sementara + reminder jatuh tempo</div></div><div style="display:flex;gap:8px"><button class="btn outline"><i data-lucide="download"></i> Export</button><button class="btn"><i data-lucide="plus"></i> Pinjam Aset</button></div></div>
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="card stat"><div class="card-b"><span class="label">Sedang Dipinjam</span><span class="val">14</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Jatuh Tempo &lt; 7 hari</span><span class="val" style="color:var(--warn)">2</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Terlambat</span><span class="val" style="color:var(--err)">1</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Dikembalikan (bln ini)</span><span class="val" style="color:var(--ok)">9</span></div></div>
+        </div>
+        <div class="toolbar">
+          <div class="isearch"><i data-lucide="search"></i><input placeholder="Cari aset / peminjam…"></div>
+          <select class="select"><option>Semua Status</option><option>Dipinjam</option><option>Jatuh Tempo</option><option>Terlambat</option><option>Dikembalikan</option></select>
+          <select class="select"><option>Semua Kategori</option><option>Laptop</option><option>HP</option><option>Tablet</option></select>
+        </div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Kode</th><th>Aset</th><th>Peminjam</th><th>Tgl Pinjam</th><th>Jatuh Tempo</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">RKI-TB-2026-0044</td><td><b>iPad 10th Gen</b><div class="muted" style="font-size:12px">Tablet</div></td><td><div class="cellname"><span class="avatar">DW</span> Dewi Wulan</div></td><td>14-06-2026</td><td>21-06-2026</td><td><span class="badge b-warn"><span class="dotb"></span> Jatuh Tempo 3 hari</span></td><td><button class="btn ghost sm"><i data-lucide="rotate-ccw"></i> Kembalikan</button></td></tr>
+            <tr><td class="mono">RKI-LT-2026-0101</td><td><b>MacBook Air M2</b><div class="muted" style="font-size:12px">Laptop</div></td><td><div class="cellname"><span class="avatar">BS</span> Budi Santoso</div></td><td>02-06-2026</td><td>16-06-2026</td><td><span class="badge b-err"><span class="dotb"></span> Terlambat 2 hari</span></td><td><button class="btn ghost sm"><i data-lucide="rotate-ccw"></i> Kembalikan</button></td></tr>
+            <tr><td class="mono">RKI-HP-2026-0091</td><td><b>Samsung A35</b><div class="muted" style="font-size:12px">HP</div></td><td><div class="cellname"><span class="avatar">RM</span> Rina Marlina</div></td><td>10-06-2026</td><td>30-06-2026</td><td><span class="badge b-info"><span class="dotb"></span> Dipinjam</span></td><td><button class="btn ghost sm"><i data-lucide="rotate-ccw"></i> Kembalikan</button></td></tr>
+            <tr><td class="mono">RKI-TB-2026-0040</td><td><b>iPad Air</b><div class="muted" style="font-size:12px">Tablet</div></td><td><div class="cellname"><span class="avatar">AS</span> Andi Saputra</div></td><td>05-06-2026</td><td>12-06-2026</td><td><span class="badge b-ok"><span class="dotb"></span> Dikembalikan</span></td><td><button class="btn ghost sm">Detail</button></td></tr>
+          </tbody>
+        </table></div><div class="pag"><span>1–4 dari 14 peminjaman aktif</span><div style="display:flex;gap:6px"><button class="btn outline sm">Sebelumnya</button><button class="btn outline sm">Berikutnya</button></div></div></div>
+        <div class="note" style="margin-top:14px"><i data-lucide="alert-triangle" style="color:var(--warn)"></i><span>Reminder otomatis (in-app &amp; email) dikirim H-3 sebelum jatuh tempo &amp; saat terlambat.</span></div>
+      </section>
+
+      <!-- OPNAME -->
+      <section class="page" id="opname">
+        <div class="page-head"><div><div class="h1">Stock Opname / Audit Fisik</div><div class="psub">Sesi: Gudang IT · 18-06-2026</div></div><div style="display:flex;gap:8px"><button class="btn outline"><i data-lucide="scan-line"></i> Scan QR</button><button class="btn"><i data-lucide="check-check"></i> Selesaikan Sesi</button></div></div>
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="card stat"><div class="card-b"><span class="label">Total Target</span><span class="val">60</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Ditemukan</span><span class="val" style="color:var(--ok)">52</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Belum Discan</span><span class="val" style="color:var(--warn)">6</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Selisih</span><span class="val" style="color:var(--err)">2</span></div></div>
+        </div>
+        <div class="card" style="margin-bottom:16px"><div class="card-b"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span><b>Progress opname</b></span><span class="muted">52 / 60 · 87%</span></div><div class="barwrap"><div class="bar" style="width:87%;background:var(--ok)"></div></div></div></div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>Kode</th><th>Aset</th><th>Lokasi Sistem</th><th>Hasil Scan</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">RKI-TB-2026-0044</td><td>iPad 10th Gen</td><td>Gudang IT</td><td><span class="badge b-ok"><i data-lucide="check"></i> Ditemukan</span></td></tr>
+            <tr><td class="mono">RKI-LT-2026-0099</td><td>Dell Latitude 5430</td><td>Gudang IT</td><td><span class="badge b-warn"><i data-lucide="map-pin"></i> Beda Lokasi</span></td></tr>
+            <tr><td class="mono">RKI-HP-2026-0070</td><td>Xiaomi Redmi 12</td><td>Gudang IT</td><td><span class="badge b-err"><i data-lucide="x"></i> Tidak Ditemukan</span></td></tr>
+            <tr><td class="mono">RKI-LT-2026-0101</td><td>MacBook Air M2</td><td>Gudang IT</td><td><span class="badge b-gray"><i data-lucide="circle-dashed"></i> Belum Discan</span></td></tr>
+          </tbody>
+        </table></div></div>
+      </section>
+
+      <!-- DISPOSAL -->
+      <section class="page" id="disposal">
+        <div class="page-head"><div><div class="h1">Disposal / Penghapusan</div><div class="psub">Pengajuan penghapusan aset + Berita Acara + approval</div></div><button class="btn"><i data-lucide="plus"></i> Ajukan Disposal</button></div>
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="card stat"><div class="card-b"><span class="label">Menunggu Approval</span><span class="val" style="color:var(--warn)">3</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Disetujui</span><span class="val" style="color:var(--ok)">2</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Dihapus (YTD)</span><span class="val">3</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Nilai Pelepasan</span><span class="val">Rp 4,1jt</span></div></div>
+        </div>
+        <div class="tabs"><div class="tab active">Menunggu Approval (3)</div><div class="tab">Disetujui</div><div class="tab">Selesai / Arsip</div></div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>No. Pengajuan</th><th>Aset</th><th>Alasan</th><th>Metode</th><th>Pengaju</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">DSP-2026-0009</td><td><b>iPhone 13</b><div class="muted" style="font-size:12px">RKI-HP-2026-0085</div></td><td>Rusak berat (mati total)</td><td><span class="badge b-gray">Scrap</span></td><td><div class="cellname"><span class="avatar">AI</span> Admin IT</div></td><td><span class="badge b-warn"><span class="dotb"></span> Menunggu Approval</span></td><td><button class="btn ghost sm">Review</button></td></tr>
+            <tr><td class="mono">DSP-2026-0008</td><td><b>Dell Latitude 5400</b><div class="muted" style="font-size:12px">RKI-LT-2025-0061</div></td><td>Usang / EOL</td><td><span class="badge b-info">Jual</span></td><td><div class="cellname"><span class="avatar">AI</span> Admin IT</div></td><td><span class="badge b-warn"><span class="dotb"></span> Menunggu Approval</span></td><td><button class="btn ghost sm">Review</button></td></tr>
+            <tr><td class="mono">DSP-2026-0007</td><td><b>Xiaomi Redmi 12</b><div class="muted" style="font-size:12px">RKI-HP-2026-0070</div></td><td>Hilang (hasil opname)</td><td><span class="badge b-err">Hilang</span></td><td><div class="cellname"><span class="avatar">MG</span> Manager GA</div></td><td><span class="badge b-warn"><span class="dotb"></span> Menunggu Approval</span></td><td><button class="btn ghost sm">Review</button></td></tr>
+            <tr><td class="mono">DSP-2026-0006</td><td><b>Lenovo V14</b><div class="muted" style="font-size:12px">RKI-LT-2024-0033</div></td><td>Hibah ke sekolah mitra</td><td><span class="badge b-acc">Hibah</span></td><td><div class="cellname"><span class="avatar">MG</span> Manager GA</div></td><td><span class="badge b-ok"><span class="dotb"></span> Disetujui</span></td><td><button class="btn ghost sm"><i data-lucide="file-text"></i> Berita Acara</button></td></tr>
+          </tbody>
+        </table></div><div class="pag"><span>1–4 dari 8 pengajuan</span><div style="display:flex;gap:6px"><button class="btn outline sm">Sebelumnya</button><button class="btn outline sm">Berikutnya</button></div></div></div>
+        <div class="grid g3" style="margin-top:16px">
+          <div class="card span2"><div class="card-h"><div class="card-t">Detail Pengajuan · DSP-2026-0009</div><div class="card-d">iPhone 13 — Rusak berat</div></div><div class="card-b grid g2" style="gap:0 32px">
+            <div><div class="kv"><span>Aset</span><b>iPhone 13</b></div><div class="kv"><span>Kode</span><b class="mono">RKI-HP-2026-0085</b></div><div class="kv"><span>Nilai Perolehan</span><b>Rp 12.000.000</b></div><div class="kv"><span>Metode</span><b>Scrap</b></div></div>
+            <div><div class="kv"><span>Pengaju</span><b>Admin IT</b></div><div class="kv"><span>Tgl Pengajuan</span><b>18-06-2026</b></div><div class="kv"><span>Approver</span><b>Manager GA</b></div><div class="kv"><span>Lampiran</span><b>foto_kerusakan.jpg</b></div></div>
+          </div></div>
+          <div class="card"><div class="card-h"><div class="card-t">Aksi Approval</div></div><div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+            <div class="note"><i data-lucide="info"></i><span>Setelah disetujui, sistem generate <b>Berita Acara Penghapusan</b> (PDF) &amp; status aset menjadi <b>Dihapus</b>.</span></div>
+            <div class="field" style="margin:0"><label class="lab">Catatan</label><input class="input" placeholder="mis. unit diserahkan ke vendor scrap"></div>
+            <div style="display:flex;gap:8px"><button class="btn outline" style="flex:1;justify-content:center;border-color:color-mix(in oklab,var(--err) 40%,transparent);color:var(--err)"><i data-lucide="x"></i> Tolak</button><button class="btn" style="flex:1;justify-content:center"><i data-lucide="check"></i> Setujui</button></div>
+          </div></div>
+        </div>
+      </section>
+
+      <!-- IMPORT -->
+      <section class="page" id="import">
+        <div class="page-head"><div><div class="h1">Import Data (CSV)</div><div class="psub">Isi data massal: aset, karyawan, atau kartu CUG</div></div><button class="btn outline"><i data-lucide="download"></i> Unduh Template</button></div>
+        <div class="tabs"><div class="tab active">Aset</div><div class="tab">Karyawan</div><div class="tab">Kartu CUG</div></div>
+        <div class="card" style="margin-bottom:16px"><div class="card-b">
+          <div class="dropzone"><i data-lucide="upload-cloud"></i><div style="margin-top:6px"><b>Tarik &amp; letakkan file CSV/XLSX</b> atau <a style="color:var(--accent);cursor:pointer">pilih file</a></div><div style="font-size:12px;margin-top:4px">Maks 5MB · sesuai template kolom</div></div>
+          <div class="note" style="margin-top:10px"><i data-lucide="check" style="color:var(--ok)"></i><span><b>aset_juni.csv</b> · 26 baris terbaca · 24 valid, 2 perlu diperbaiki</span></div>
+        </div></div>
+        <div class="card"><div class="card-h"><div class="card-t">Pratinjau &amp; Validasi</div><div class="card-d">Baris bermasalah ditandai sebelum disimpan</div></div>
+          <div class="card-b" style="padding-top:6px"><div class="tablewrap"><table>
+            <thead><tr><th>#</th><th>Kode</th><th>Nama</th><th>Kategori</th><th>PIC</th><th>Validasi</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td class="mono">RKI-LT-2026-0120</td><td>Asus ExpertBook</td><td>Laptop</td><td>Andi Saputra</td><td><span class="badge b-ok"><i data-lucide="check"></i> Valid</span></td></tr>
+              <tr><td>2</td><td class="mono">RKI-HP-2026-0090</td><td>Samsung A35</td><td>HP</td><td>Dewi Wulan</td><td><span class="badge b-ok"><i data-lucide="check"></i> Valid</span></td></tr>
+              <tr style="background:color-mix(in oklab,var(--err) 6%,var(--bg))"><td>3</td><td class="mono">RKI-CUG-0240</td><td>0811-2345-678</td><td>Kartu CUG</td><td>—</td><td><span class="badge b-err"><i data-lucide="x"></i> Nomor CUG duplikat</span></td></tr>
+              <tr style="background:color-mix(in oklab,var(--warn) 7%,var(--bg))"><td>4</td><td class="mono">—</td><td>Lenovo V14</td><td>Laptop</td><td>Sdr. X</td><td><span class="badge b-warn"><i data-lucide="alert-triangle"></i> PIC tidak dikenal</span></td></tr>
+            </tbody>
+          </table></div></div>
+          <div class="pag"><span>24 baris valid siap diimpor · 2 perlu diperbaiki</span><div style="display:flex;gap:6px"><button class="btn outline sm">Batal</button><button class="btn sm"><i data-lucide="database"></i> Import 24 baris</button></div></div>
+        </div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="page" id="reports">
+        <div class="page-head"><div><div class="h1">Laporan</div><div class="psub">Ekspor ke Excel (.xlsx) / PDF</div></div></div>
+        <div class="grid g3">
+          <div class="card"><div class="card-b"><span class="ic-box" style="background:color-mix(in oklab,var(--info) 12%,var(--bg));color:var(--info)"><i data-lucide="package"></i></span><div class="card-t" style="margin:10px 0 2px">Daftar Aset</div><div class="card-d">Filter kategori/lokasi/status/company</div><button class="btn outline sm" style="margin-top:12px"><i data-lucide="download"></i> Export</button></div></div>
+          <div class="card"><div class="card-b"><span class="ic-box" style="background:color-mix(in oklab,var(--accent) 14%,var(--bg));color:var(--accent)"><i data-lucide="smartphone"></i></span><div class="card-t" style="margin:10px 0 2px">Rekap Kartu CUG</div><div class="card-d">Biaya per paket Combo A/B/Non Paket</div><button class="btn outline sm" style="margin-top:12px"><i data-lucide="download"></i> Export</button></div></div>
+          <div class="card"><div class="card-b"><span class="ic-box" style="background:color-mix(in oklab,var(--ok) 12%,var(--bg));color:var(--ok)"><i data-lucide="arrow-left-right"></i></span><div class="card-t" style="margin:10px 0 2px">Riwayat Serah-Terima</div><div class="card-d">Mutasi &amp; assignment per periode</div><button class="btn outline sm" style="margin-top:12px"><i data-lucide="download"></i> Export</button></div></div>
+          <div class="card"><div class="card-b"><span class="ic-box" style="background:color-mix(in oklab,var(--warn) 16%,var(--bg));color:var(--warn)"><i data-lucide="wrench"></i></span><div class="card-t" style="margin:10px 0 2px">Biaya Maintenance</div><div class="card-d">Akumulasi biaya per aset/departemen</div><button class="btn outline sm" style="margin-top:12px"><i data-lucide="download"></i> Export</button></div></div>
+          <div class="card"><div class="card-b"><span class="ic-box" style="background:color-mix(in oklab,var(--err) 12%,var(--bg));color:var(--err)"><i data-lucide="clipboard-check"></i></span><div class="card-t" style="margin:10px 0 2px">Hasil Stock Opname</div><div class="card-d">Selisih sistem vs fisik</div><button class="btn outline sm" style="margin-top:12px"><i data-lucide="download"></i> Export</button></div></div>
+          <div class="card"><div class="card-b"><span class="ic-box" style="background:color-mix(in oklab,var(--ink) 7%,var(--bg));color:var(--muted)"><i data-lucide="trash-2"></i></span><div class="card-t" style="margin:10px 0 2px">Aset Dihapus</div><div class="card-d">Arsip disposal + Berita Acara</div><button class="btn outline sm" style="margin-top:12px"><i data-lucide="download"></i> Export</button></div></div>
+        </div>
+      </section>
+
+      <!-- SELF SERVICE -->
+      <section class="page" id="self">
+        <div class="page-head"><div><div class="h1">Aset Saya</div><div class="psub">Portal self-service — Andi Saputra · Departemen IT</div></div><button class="btn"><i data-lucide="plus"></i> Ajukan Aset Baru</button></div>
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="card stat"><div class="card-b"><span class="label">Aset Dipegang</span><span class="val">3</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Kartu CUG</span><span class="val">1</span><span class="badge b-gray">Non Paket</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Permintaan Aktif</span><span class="val" style="color:var(--warn)">2</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Pinjaman Berjalan</span><span class="val">0</span></div></div>
+        </div>
+        <div class="grid g2">
+          <div class="card"><div class="card-h"><div class="card-t">Perangkat yang Saya Pegang</div><div class="card-d">Scan QR pada perangkat untuk lapor cepat</div></div><div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+            <div class="acard"><div class="thumb"><i data-lucide="laptop"></i></div><div style="flex:1"><div style="font-weight:600">Lenovo ThinkPad T14</div><div class="muted" style="font-size:12px"><span class="mono">RKI-LT-2026-0118</span> · Garansi s/d 12-01-2028</div><div style="margin-top:8px;display:flex;gap:6px"><span class="badge b-ok"><span class="dotb"></span> Baik</span><button class="btn outline sm"><i data-lucide="wrench"></i> Lapor Rusak</button></div></div></div>
+            <div class="acard"><div class="thumb"><i data-lucide="smartphone"></i></div><div style="flex:1"><div style="font-weight:600">0813-5512-777 · Kartu CUG</div><div class="muted" style="font-size:12px">XL · Non Paket</div><div style="margin-top:8px;display:flex;gap:6px"><span class="badge b-ok"><span class="dotb"></span> Aktif</span><button class="btn outline sm"><i data-lucide="repeat"></i> Minta Ganti Paket</button></div></div></div>
+            <div class="acard"><div class="thumb"><i data-lucide="tablet"></i></div><div style="flex:1"><div style="font-weight:600">iPad Air (pinjaman dikembalikan)</div><div class="muted" style="font-size:12px"><span class="mono">RKI-TB-2026-0040</span> · selesai 12-06-2026</div><div style="margin-top:8px"><span class="badge b-gray"><span class="dotb"></span> Riwayat</span></div></div></div>
+          </div></div>
+          <div class="card"><div class="card-h"><div class="card-t">Permintaan Saya</div><div class="card-d">Status pengajuan</div></div><div class="card-b"><div class="timeline">
+            <div class="tl"><div class="when">Hari ini · 10:12</div><div class="what">Lapor rusak <b>HP Samsung A54</b> — layar retak</div><span class="badge b-warn"><span class="dotb"></span> Diproses IT</span></div>
+            <div class="tl"><div class="when">17-06-2026</div><div class="what">Ajukan <b>aset baru: Headset</b> untuk WFH</div><span class="badge b-info"><span class="dotb"></span> Menunggu Approval</span></div>
+            <div class="tl"><div class="when">10-06-2026</div><div class="what">Terima <b>Lenovo ThinkPad T14</b> (BAST #00231)</div><span class="badge b-ok"><i data-lucide="check"></i> Selesai</span></div>
+          </div></div></div>
+        </div>
+      </section>
+
+      <!-- SITE & LOKASI -->
+      <section class="page" id="sites">
+        <div class="page-head"><div><div class="h1">Site &amp; Lokasi</div><div class="psub">Struktur multi-site (kota) → sub-site · Realco / Realfood</div></div><div style="display:flex;gap:8px"><button class="btn outline"><i data-lucide="plus"></i> Tambah Sub-site</button><button class="btn"><i data-lucide="plus"></i> Tambah Site</button></div></div>
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="card stat"><div class="card-b"><span class="label">Total Site</span><span class="val">4</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Total Sub-site</span><span class="val">9</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Aset Tersebar</span><span class="val">342</span></div></div>
+          <div class="card stat"><div class="card-b"><span class="label">Site Terbanyak</span><span class="val" style="font-size:18px">Bojonegoro</span><span class="muted" style="font-size:12px">168 aset</span></div></div>
+        </div>
+        <div class="grid g2">
+          <div class="card"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center"><div><div class="card-t"><i data-lucide="map-pin" style="width:15px;vertical-align:-2px"></i> Bojonegoro</div><div class="card-d">5 sub-site · 168 aset</div></div><span class="badge b-acc">Site</span></div><div class="card-b" style="display:flex;flex-direction:column;gap:2px">
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realfood Mulyoagung</span><span class="badge b-gray">64 aset</span></div>
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realfood CS Gofun</span><span class="badge b-gray">22 aset</span></div>
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Abadi Lestari Indonesia Balen <span class="badge b-acc" style="margin-left:5px" title="PT Abadi Lestari Indonesia Tbk">ALI</span></span><span class="badge b-gray">31 aset</span></div>
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realfood Abon</span><span class="badge b-gray">28 aset</span></div>
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realfood Gudang Bentol</span><span class="badge b-gray">23 aset</span></div>
+          </div></div>
+          <div class="card"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center"><div><div class="card-t"><i data-lucide="map-pin" style="width:15px;vertical-align:-2px"></i> Jakarta</div><div class="card-d">2 sub-site · 86 aset</div></div><span class="badge b-acc">Site</span></div><div class="card-b" style="display:flex;flex-direction:column;gap:2px">
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realco Hub Palmera</span><span class="badge b-gray">49 aset</span></div>
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realco Gudang Kemunging</span><span class="badge b-gray">37 aset</span></div>
+          </div></div>
+          <div class="card"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center"><div><div class="card-t"><i data-lucide="map-pin" style="width:15px;vertical-align:-2px"></i> Surabaya</div><div class="card-d">1 sub-site · 58 aset</div></div><span class="badge b-acc">Site</span></div><div class="card-b" style="display:flex;flex-direction:column;gap:2px">
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realco Surabaya Spazio</span><span class="badge b-gray">58 aset</span></div>
+          </div></div>
+          <div class="card"><div class="card-h" style="display:flex;justify-content:space-between;align-items:center"><div><div class="card-t"><i data-lucide="map-pin" style="width:15px;vertical-align:-2px"></i> Yogyakarta</div><div class="card-d">1 sub-site · 30 aset</div></div><span class="badge b-acc">Site</span></div><div class="card-b" style="display:flex;flex-direction:column;gap:2px">
+            <div class="kv"><span class="legend"><i data-lucide="building-2" style="width:14px"></i> Realco WorkHub Yogyakarta</span><span class="badge b-gray">30 aset</span></div>
+          </div></div>
+        </div>
+        <div class="note" style="margin-top:16px"><i data-lucide="info"></i><span>Setiap aset terikat ke <b>1 sub-site</b>. Sebuah sub-site bisa dimiliki <b>company tertentu</b> (mis. <b>Abadi Lestari Indonesia Balen → ALI</b> · PT Abadi Lestari Indonesia Tbk). Site/Sub-site dipakai untuk filter, mutasi antar-lokasi, &amp; rekap laporan per wilayah/company. Dapat di-import via CSV (kolom <span class="mono">site</span>, <span class="mono">sub_site</span>, <span class="mono">company</span>).</span></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="settings">
+        <div class="page-head"><div><div class="h1">Pengaturan &amp; RBAC</div><div class="psub">User, peran &amp; konfigurasi sistem</div></div><button class="btn"><i data-lucide="user-plus"></i> Tambah User</button></div>
+        <div class="tabs"><div class="tab active">Pengguna &amp; Peran</div><div class="tab">Master Paket CUG</div><div class="tab">Format Kode Aset</div></div>
+        <div class="card"><div class="tablewrap"><table>
+          <thead><tr><th>User</th><th>Email</th><th>Peran</th><th>Company</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><div class="cellname"><span class="avatar">WB</span> Webmaster</div></td><td class="muted">webmaster@realco.id</td><td><span class="badge b-acc">Super Admin</span></td><td>Semua</td><td><span class="badge b-ok">Aktif</span></td></tr>
+            <tr><td><div class="cellname"><span class="avatar">AI</span> Admin IT</div></td><td class="muted">it@realco.id</td><td><span class="badge b-info">Admin Aset</span></td><td>RKI</td><td><span class="badge b-ok">Aktif</span></td></tr>
+            <tr><td><div class="cellname"><span class="avatar">MG</span> Manager GA</div></td><td class="muted">ga@realco.id</td><td><span class="badge b-warn">Approver</span></td><td>RKI</td><td><span class="badge b-ok">Aktif</span></td></tr>
+            <tr><td><div class="cellname"><span class="avatar">KR</span> Karyawan</div></td><td class="muted">staff@realco.id</td><td><span class="badge b-gray">User</span></td><td>RKI</td><td><span class="badge b-ok">Aktif</span></td></tr>
+          </tbody>
+        </table></div></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: Pasang / Ganti Kartu CUG -->
+<div class="modal-ov" id="cugModal" onclick="if(event.target===this)closeCug()">
+  <div class="modal">
+    <div class="modal-h">
+      <div style="display:flex;gap:10px;align-items:center"><span class="ic-box" style="background:color-mix(in oklab,var(--accent) 16%,var(--bg));color:var(--accent)"><i data-lucide="smartphone"></i></span><div><div class="card-t">Pasang / Ganti Kartu CUG</div><div class="card-d">Samsung Galaxy A54 · RKI-HP-2026-0086</div></div></div>
+      <button class="btn ghost icon sm" onclick="closeCug()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label class="lab">Nomor CUG (Tersedia)</label>
+        <select class="select" id="mCugNo" onchange="syncModalCug()" style="width:100%">
+          <option data-paket="Combo A" data-biaya="Rp 150.000" data-op="Telkomsel">0811-7001-225 · Telkomsel</option>
+          <option data-paket="Combo B" data-biaya="Rp 100.000" data-op="Indosat">0815-3300-908 · Indosat</option>
+          <option data-paket="Non Paket" data-biaya="pay-as-use" data-op="XL">0813-5512-777 · XL</option>
+          <option data-paket="Combo B" data-biaya="Rp 100.000" data-op="Indosat">0817-2200-410 · Indosat</option>
+        </select>
+        <div class="help">Hanya nomor berstatus <b>Tersedia</b> yang tampil.</div>
+      </div>
+      <div class="grid g2">
+        <div class="field" style="margin:0"><label class="lab">Paket</label><input class="input" id="mCugPaket" value="Combo A" disabled></div>
+        <div class="field" style="margin:0"><label class="lab">Biaya / bln</label><input class="input" id="mCugBiaya" value="Rp 150.000" disabled></div>
+      </div>
+      <div class="field" style="margin:14px 0 0"><label class="lab">Operator</label><input class="input" id="mCugOp" value="Telkomsel" disabled></div>
+      <div class="note" style="margin-top:14px"><i data-lucide="info"></i><span>Kartu lama (jika ada) otomatis dilepas &amp; statusnya kembali <b>Tersedia</b>. Perubahan tercatat di timeline aset.</span></div>
+    </div>
+    <div class="modal-f"><button class="btn outline" onclick="closeCug()">Batal</button><button class="btn" onclick="saveCug()"><i data-lucide="check"></i> Simpan</button></div>
+  </div>
+</div>
+
+<script>
+  var ICONS={
+    'layout-dashboard':'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+    'package':'<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+    'file-text':'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+    'smartphone':'<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
+    'arrow-left-right':'<path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>',
+    'git-branch':'<line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+    'wrench':'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+    'clock':'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    'clipboard-check':'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+    'trash-2':'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+    'upload':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+    'upload-cloud':'<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>',
+    'bar-chart-3':'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    'settings':'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    'user':'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    'user-check':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>',
+    'user-plus':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>',
+    'panel-left':'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>',
+    'search':'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    'moon':'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    'bell':'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    'plus':'<path d="M5 12h14"/><path d="M12 5v14"/>',
+    'download':'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+    'calendar':'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+    'sliders-horizontal':'<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+    'printer':'<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>',
+    'pencil':'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+    'qr-code':'<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+    'repeat':'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+    'check':'<path d="M20 6 9 17l-5-5"/>',
+    'check-check':'<path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>',
+    'x':'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    'info':'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    'trending-up':'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+    'alert-triangle':'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    'shield-alert':'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+    'scan-line':'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+    'map-pin':'<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+    'circle-dashed':'<path d="M10.1 2.18a9.93 9.93 0 0 1 3.8 0"/><path d="M17.6 3.71a9.95 9.95 0 0 1 2.69 2.7"/><path d="M21.82 10.1a9.93 9.93 0 0 1 0 3.8"/><path d="M20.29 17.6a9.95 9.95 0 0 1-2.7 2.69"/><path d="M13.9 21.82a9.94 9.94 0 0 1-3.8 0"/><path d="M6.4 20.29a9.95 9.95 0 0 1-2.69-2.7"/><path d="M2.18 13.9a9.93 9.93 0 0 1 0-3.8"/><path d="M3.71 6.4a9.95 9.95 0 0 1 2.7-2.69"/>',
+    'rotate-ccw':'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+    'database':'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+    'file-check-2':'<path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m3 15 2 2 4-4"/>',
+    'log-out':'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+    'chevrons-up-down':'<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+    'laptop':'<path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>',
+    'tablet':'<rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/>',
+    'tag':'<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+    'building-2':'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>',
+    'sun':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+    'link':'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    'unlink':'<path d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71"/><line x1="8" x2="8" y1="2" y2="5"/><line x1="2" x2="5" y1="8" y2="8"/><line x1="16" x2="16" y1="19" y2="22"/><line x1="19" x2="22" y1="16" y2="16"/>'
+  };
+  function renderIcons(){
+    var ns='http://www.w3.org/2000/svg';
+    document.querySelectorAll('i[data-lucide]').forEach(function(e){
+      if(e.dataset.done)return;
+      var n=e.getAttribute('data-lucide'); if(!ICONS[n])return;
+      e.innerHTML='<svg xmlns="'+ns+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">'+ICONS[n]+'</svg>';
+      e.dataset.done='1';
+    });
+  }
+  var titles={dashboard:'Dashboard',assets:'Daftar Aset',addasset:'Tambah Aset',detail:'Detail Aset',cug:'Kartu CUG',handover:'Serah-Terima',mutasi:'Mutasi & Approval',maintenance:'Maintenance',loan:'Peminjaman',opname:'Stock Opname',disposal:'Disposal',import:'Import CSV',reports:'Laporan',self:'Aset Saya',sites:'Site & Lokasi',settings:'Pengaturan & RBAC'};
+  function go(id,el){
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('show')});
+    document.getElementById(id).classList.add('show');
+    document.getElementById('crumb').textContent=titles[id]||id;
+    document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+    var target=el||document.querySelector('.nav-item[data-id="'+id+'"]');
+    if(target)target.classList.add('active');
+    closeNav(); window.scrollTo(0,0);
+  }
+  function onCat(){
+    var v=document.getElementById('catSel').value;
+    var isDev=(v==='hp'||v==='tablet');
+    document.getElementById('cugPanel').style.display=isDev?'block':'none';
+    var names={hp:'HP / Handphone',tablet:'Tablet',laptop:'Laptop'};
+    var icons={hp:'smartphone',tablet:'tablet',laptop:'laptop'};
+    var cats={hp:'HP',tablet:'Tablet',laptop:'Laptop'};
+    document.getElementById('sumName').textContent=names[v];
+    document.getElementById('sumCat').textContent=cats[v];
+    var t=document.getElementById('sumThumb');t.querySelector('i').setAttribute('data-lucide',icons[v]);t.querySelector('i').dataset.done='';t.querySelector('i').innerHTML='';
+    renderIcons(); onCug();
+  }
+  function onCug(){
+    var dev=(document.getElementById('catSel').value!=='laptop');
+    var on=document.getElementById('cugChk').checked && dev;
+    document.getElementById('cugFields').style.display=on?'grid':'none';
+    document.getElementById('sumCugWrap').style.display=on?'block':'none';
+    if(on){
+      var opt=document.getElementById('cugNo').selectedOptions[0];
+      var paket=opt.getAttribute('data-paket'),biaya=opt.getAttribute('data-biaya'),op=opt.getAttribute('data-op');
+      document.getElementById('cugPaket').value=paket;
+      document.getElementById('cugBiaya').value=biaya;
+      document.getElementById('cugOp').value=op;
+      document.getElementById('sumCugNo').textContent=opt.text.split(' · ')[0];
+      document.getElementById('sumCugPaket').textContent=paket;
+      document.getElementById('sumCugBiaya').textContent=biaya;
+    }
+  }
+  function openCug(){document.getElementById('cugModal').classList.add('show');syncModalCug();}
+  function closeCug(){document.getElementById('cugModal').classList.remove('show');}
+  function syncModalCug(){
+    var o=document.getElementById('mCugNo').selectedOptions[0];
+    document.getElementById('mCugPaket').value=o.getAttribute('data-paket');
+    document.getElementById('mCugOp').value=o.getAttribute('data-op');
+    document.getElementById('mCugBiaya').value=o.getAttribute('data-biaya');
+  }
+  function saveCug(){
+    var o=document.getElementById('mCugNo').selectedOptions[0];
+    var pk=o.getAttribute('data-paket');
+    document.getElementById('detCugNo').textContent=o.text.split(' · ')[0];
+    document.getElementById('detCugOp').textContent=o.getAttribute('data-op');
+    var pb=document.getElementById('detCugPaket');
+    pb.textContent=pk; pb.className='badge '+(pk==='Combo A'?'b-acc':pk==='Combo B'?'b-info':'b-gray');
+    document.getElementById('detCugBiaya').textContent=o.getAttribute('data-biaya');
+    closeCug();
+  }
+  function toggleTheme(){
+    var dark=document.body.classList.toggle('dark');
+    var ic=document.getElementById('themeIcon');
+    ic.setAttribute('data-lucide',dark?'sun':'moon'); ic.dataset.done=''; ic.innerHTML='';
+    renderIcons();
+  }
+  function openNav(){document.getElementById('side').classList.add('open');document.getElementById('ov').classList.add('show')}
+  function closeNav(){document.getElementById('side').classList.remove('open');document.getElementById('ov').classList.remove('show')}
+  document.addEventListener('click',function(e){if(e.target.classList.contains('tab')){var sib=e.target.parentElement.querySelectorAll('.tab');sib.forEach(function(t){t.classList.remove('active')});e.target.classList.add('active');}});
+  renderIcons();
+  onCat();
+</script>
+</body>
+</html>

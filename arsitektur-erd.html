@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagged — Arsitektur &amp; ERD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* fleet-tokens */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#0b0c0e; --muted:#6b7280;
+  --accent:#6d5efc; --on-accent:#ffffff;
+  --primary:#18181b; --on-primary:#fafafa;
+  --font-head:'Inter Tight', system-ui, sans-serif;
+  --density:1; --atmos:0;
+}
+/* /fleet-tokens */
+:root{ --c-client:#2563eb; --c-app:#7c3aed; --c-api:#0891b2; --c-data:#16a34a; --c-svc:#d97706; }
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased;position:relative}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:var(--atmos,0);background:radial-gradient(1000px 500px at 85% -5%,color-mix(in oklab,var(--accent) 40%,transparent),transparent 60%)}
+h1,h2,h3,.h1{font-family:var(--font-head);letter-spacing:-.01em}
+.muted{color:var(--muted)}
+.wrap{max-width:1180px;margin:0 auto;padding:calc(32px * var(--density,1)) 22px 70px;position:relative;z-index:1}
+
+header.top{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.logo{width:38px;height:38px;border-radius:10px;background:var(--primary);color:var(--on-primary);display:grid;place-items:center}
+.logo svg{width:21px;height:21px}
+.h1{font-size:25px}
+.sub{color:var(--muted);margin:2px 0 22px}
+.nav{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.nav a{font-size:13px;font-weight:500;text-decoration:none;color:var(--ink);border:1px solid color-mix(in oklab,var(--ink) 14%,transparent);background:var(--surface);padding:7px 13px;border-radius:999px}
+.nav a:hover{background:var(--accent);color:var(--on-accent);border-color:transparent}
+
+.card{background:var(--surface);border:1px solid color-mix(in oklab,var(--ink) 11%,transparent);border-radius:16px;padding:calc(22px * var(--density,1));margin-bottom:24px;box-shadow:0 1px 3px color-mix(in oklab,var(--ink) 6%,transparent)}
+.sec-t{font-size:19px;font-weight:700;font-family:var(--font-head)}
+.sec-d{color:var(--muted);font-size:13px;margin:3px 0 18px}
+.tagn{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:color-mix(in oklab,var(--accent) 13%,var(--bg));padding:3px 10px;border-radius:6px;margin-bottom:10px}
+
+/* architecture svg */
+.diagram{width:100%;overflow-x:auto}
+.diagram svg{display:block;min-width:760px;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+/* stack chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{font-size:12px;font-weight:600;border:1px solid color-mix(in oklab,var(--ink) 13%,transparent);border-radius:999px;padding:5px 11px;background:color-mix(in oklab,var(--ink) 3%,var(--bg))}
+
+/* ERD */
+.erd-group{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:22px 0 10px}
+.erd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1000px){.erd-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.erd-grid{grid-template-columns:1fr}}
+.ent{border:1px solid color-mix(in oklab,var(--ink) 13%,transparent);border-radius:11px;overflow:hidden;background:var(--surface)}
+.ent-h{padding:9px 12px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;border-bottom:1px solid color-mix(in oklab,var(--ink) 11%,transparent);background:color-mix(in oklab,var(--accent) 9%,var(--bg))}
+.ent-h svg{width:14px;height:14px;color:var(--accent)}
+.ent ul{list-style:none}
+.fld{display:flex;align-items:center;gap:7px;padding:5px 12px;font-size:12.5px;border-bottom:1px solid color-mix(in oklab,var(--ink) 7%,transparent)}
+.fld:last-child{border-bottom:none}
+.fld .nm{flex:1}
+.fld .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+.kbadge{font-size:9px;font-weight:800;letter-spacing:.03em;padding:1px 5px;border-radius:4px}
+.pk{background:color-mix(in oklab,#d97706 22%,var(--bg));color:#9a6207}
+.fk{background:color-mix(in oklab,#2563eb 18%,var(--bg));color:#1d4ed8}
+.uq{background:color-mix(in oklab,#16a34a 18%,var(--bg));color:#15803d}
+
+/* relations table */
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th{text-align:left;font-weight:600;color:var(--muted);padding:9px 12px;border-bottom:1px solid color-mix(in oklab,var(--ink) 12%,transparent)}
+td{padding:9px 12px;border-bottom:1px solid color-mix(in oklab,var(--ink) 8%,transparent)}
+tr:last-child td{border-bottom:none}
+.card-rel{background:color-mix(in oklab,var(--accent) 13%,var(--bg));color:var(--accent);font-weight:700;font-size:11px;padding:2px 8px;border-radius:6px;font-family:ui-monospace,monospace}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg></div>
+    <div><div class="h1">Tagged — Arsitektur &amp; Skema Database</div></div>
+  </header>
+  <div class="sub">Manajemen Aset &amp; Tracking · Realco / Realfood · dokumen teknis pendamping requirement</div>
+  <div class="nav"><a href="#arsitektur">1 · Arsitektur Sistem</a><a href="#erd">2 · Skema Database (ERD)</a><a href="#stack">Tech Stack</a></div>
+
+  <!-- ARSITEKTUR -->
+  <section class="card" id="arsitektur">
+    <div class="tagn">Diagram 1</div>
+    <div class="sec-t">Arsitektur Sistem</div>
+    <div class="sec-d">Alur: Client / PWA → Nginx → Frontend (React + shadcn) → API (Laravel) → Database, Queue, Storage, Email.</div>
+    <div class="diagram">
+      <svg viewBox="0 0 1080 470" font-family="Inter">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="color-mix(in oklab,var(--ink) 45%,transparent)"/></marker>
+        </defs>
+        <!-- column labels -->
+        <g font-size="11" font-weight="700" fill="var(--muted)" letter-spacing="1" text-transform="uppercase">
+          <text x="40" y="28">CLIENT</text><text x="262" y="28">EDGE</text><text x="452" y="28">APLIKASI</text><text x="772" y="28">DATA &amp; SERVICES</text>
+        </g>
+
+        <!-- CLIENT -->
+        <g>
+          <rect x="40" y="60" width="180" height="64" rx="11" fill="color-mix(in oklab,var(--c-client) 12%,var(--bg))" stroke="var(--c-client)"/>
+          <text x="56" y="88" font-size="13" font-weight="700" fill="var(--ink)">Admin / Approver</text>
+          <text x="56" y="106" font-size="11" fill="var(--muted)">Browser desktop</text>
+          <rect x="40" y="150" width="180" height="64" rx="11" fill="color-mix(in oklab,var(--c-client) 12%,var(--bg))" stroke="var(--c-client)"/>
+          <text x="56" y="178" font-size="13" font-weight="700" fill="var(--ink)">Karyawan</text>
+          <text x="56" y="196" font-size="11" fill="var(--muted)">PWA · scan QR (HP)</text>
+        </g>
+
+        <!-- EDGE -->
+        <rect x="262" y="105" width="150" height="74" rx="11" fill="color-mix(in oklab,var(--ink) 5%,var(--bg))" stroke="color-mix(in oklab,var(--ink) 30%,transparent)"/>
+        <text x="280" y="135" font-size="13" font-weight="700" fill="var(--ink)">Nginx</text>
+        <text x="280" y="153" font-size="11" fill="var(--muted)">Reverse proxy</text>
+        <text x="280" y="168" font-size="11" fill="var(--muted)">TLS / HTTPS</text>
+
+        <!-- APP -->
+        <rect x="452" y="48" width="240" height="80" rx="11" fill="color-mix(in oklab,var(--c-app) 11%,var(--bg))" stroke="var(--c-app)"/>
+        <text x="470" y="76" font-size="13" font-weight="700" fill="var(--ink)">Frontend</text>
+        <text x="470" y="94" font-size="11" fill="var(--muted)">React + TypeScript + shadcn/ui</text>
+        <text x="470" y="110" font-size="11" fill="var(--muted)">Inertia.js · Tailwind · PWA</text>
+
+        <rect x="452" y="150" width="240" height="86" rx="11" fill="color-mix(in oklab,var(--c-api) 12%,var(--bg))" stroke="var(--c-api)"/>
+        <text x="470" y="178" font-size="13" font-weight="700" fill="var(--ink)">Backend API</text>
+        <text x="470" y="196" font-size="11" fill="var(--muted)">Laravel (PHP) · REST</text>
+        <text x="470" y="212" font-size="11" fill="var(--muted)">Auth + RBAC · validasi</text>
+        <text x="470" y="228" font-size="11" fill="var(--muted)">Export Excel/PDF (BAST)</text>
+
+        <rect x="452" y="262" width="240" height="62" rx="11" fill="color-mix(in oklab,var(--c-svc) 12%,var(--bg))" stroke="var(--c-svc)"/>
+        <text x="470" y="288" font-size="13" font-weight="700" fill="var(--ink)">Import CSV</text>
+        <text x="470" y="306" font-size="11" fill="var(--muted)">Validasi baris → batch (queue)</text>
+
+        <!-- DATA & SERVICES -->
+        <g>
+          <rect x="772" y="48" width="170" height="56" rx="10" fill="color-mix(in oklab,var(--c-data) 12%,var(--bg))" stroke="var(--c-data)"/>
+          <text x="788" y="72" font-size="13" font-weight="700" fill="var(--ink)">PostgreSQL</text>
+          <text x="788" y="90" font-size="11" fill="var(--muted)">Database utama</text>
+
+          <rect x="772" y="118" width="170" height="56" rx="10" fill="color-mix(in oklab,var(--c-svc) 12%,var(--bg))" stroke="var(--c-svc)"/>
+          <text x="788" y="142" font-size="13" font-weight="700" fill="var(--ink)">Redis</text>
+          <text x="788" y="160" font-size="11" fill="var(--muted)">Cache + Queue</text>
+
+          <rect x="772" y="188" width="170" height="56" rx="10" fill="color-mix(in oklab,var(--c-svc) 12%,var(--bg))" stroke="var(--c-svc)"/>
+          <text x="788" y="212" font-size="13" font-weight="700" fill="var(--ink)">Worker</text>
+          <text x="788" y="230" font-size="11" fill="var(--muted)">Horizon · jobs/reminder</text>
+
+          <rect x="772" y="258" width="170" height="56" rx="10" fill="color-mix(in oklab,var(--c-data) 12%,var(--bg))" stroke="var(--c-data)"/>
+          <text x="788" y="282" font-size="13" font-weight="700" fill="var(--ink)">Object Storage</text>
+          <text x="788" y="300" font-size="11" fill="var(--muted)">S3 / MinIO · foto, PDF</text>
+
+          <rect x="772" y="328" width="170" height="56" rx="10" fill="color-mix(in oklab,var(--ink) 5%,var(--bg))" stroke="color-mix(in oklab,var(--ink) 30%,transparent)"/>
+          <text x="788" y="352" font-size="13" font-weight="700" fill="var(--ink)">Email / SMTP</text>
+          <text x="788" y="370" font-size="11" fill="var(--muted)">Reminder · notifikasi</text>
+        </g>
+
+        <!-- arrows -->
+        <g stroke="color-mix(in oklab,var(--ink) 45%,transparent)" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+          <path d="M220 92 H262"/>
+          <path d="M220 182 H240 V150 H262"/>
+          <path d="M412 130 H432 V88 H452"/>
+          <path d="M412 150 H432 V193 H452"/>
+          <path d="M572 128 V150"/>
+          <path d="M692 188 H772 V104 H772"/>
+          <path d="M692 200 H732 V146 H772"/>
+          <path d="M692 293 V293 H720 V216 H772"/>
+          <path d="M692 210 H752 V286 H772"/>
+        </g>
+        <g stroke="color-mix(in oklab,var(--c-svc) 70%,transparent)" stroke-width="1.6" fill="none" marker-end="url(#ar)" stroke-dasharray="4 3">
+          <path d="M857 174 V188"/>
+          <path d="M857 244 V328 H857"/>
+        </g>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--c-client)"></i> Client</span>
+      <span><i style="background:var(--c-app)"></i> Frontend</span>
+      <span><i style="background:var(--c-api)"></i> API</span>
+      <span><i style="background:var(--c-data)"></i> Data / Storage</span>
+      <span><i style="background:var(--c-svc)"></i> Services (queue/worker/email)</span>
+      <span><i style="background:color-mix(in oklab,var(--c-svc) 70%,transparent)"></i> Async (job)</span>
+    </div>
+  </section>
+
+  <!-- ERD -->
+  <section class="card" id="erd">
+    <div class="tagn">Diagram 2</div>
+    <div class="sec-t">Skema Database (ERD)</div>
+    <div class="sec-d">Entitas inti Tagged. <span class="kbadge pk">PK</span> primary key · <span class="kbadge fk">FK</span> foreign key · <span class="kbadge uq">UQ</span> unik.</div>
+
+    <div class="erd-group">A · Master Data</div>
+    <div class="erd-grid">
+      <div class="ent"><div class="ent-h">company</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="nm">kode</span><span class="muted">RKI/RWA/ALI/EJP/HMW</span></li>
+        <li class="fld"><span class="nm">nama</span></li></ul></div>
+      <div class="ent"><div class="ent-h">site</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="nm">nama_kota</span><span class="muted">Bojonegoro…</span></li></ul></div>
+      <div class="ent"><div class="ent-h">sub_site</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">site_id</span></li>
+        <li class="fld"><span class="nm">nama</span><span class="muted">Realco Spazio…</span></li>
+        <li class="fld"><span class="nm">alamat</span></li></ul></div>
+      <div class="ent"><div class="ent-h">category</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">parent_id</span></li>
+        <li class="fld"><span class="nm">nama</span><span class="muted">HP/Laptop…</span></li></ul></div>
+      <div class="ent"><div class="ent-h">employee</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="nm">nama</span></li>
+        <li class="fld"><span class="nm">departemen</span></li>
+        <li class="fld"><span class="nm">email</span></li></ul></div>
+      <div class="ent"><div class="ent-h">user</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">employee_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">role_id</span></li>
+        <li class="fld"><span class="kbadge uq">UQ</span><span class="nm">email</span></li></ul></div>
+      <div class="ent"><div class="ent-h">role</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="nm">nama</span><span class="muted">Admin/Approver…</span></li>
+        <li class="fld"><span class="nm">permissions</span></li></ul></div>
+      <div class="ent"><div class="ent-h">vendor</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="nm">nama</span></li>
+        <li class="fld"><span class="nm">kontak</span></li></ul></div>
+    </div>
+
+    <div class="erd-group">B · Aset &amp; Kartu CUG</div>
+    <div class="erd-grid">
+      <div class="ent"><div class="ent-h">asset ★</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge uq">UQ</span><span class="nm">kode_aset</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">category_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">sub_site_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">company_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">pic_employee_id</span></li>
+        <li class="fld"><span class="nm">serial · kondisi</span></li>
+        <li class="fld"><span class="nm">status</span></li>
+        <li class="fld"><span class="nm">nilai_perolehan</span></li>
+        <li class="fld"><span class="nm">garansi_sd</span></li></ul></div>
+      <div class="ent"><div class="ent-h">cug_card</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge uq">UQ</span><span class="nm">msisdn</span></li>
+        <li class="fld"><span class="nm">iccid · operator</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">package_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">asset_id</span><span class="muted">nullable</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">pic_employee_id</span></li>
+        <li class="fld"><span class="nm">status · biaya</span></li></ul></div>
+      <div class="ent"><div class="ent-h">cug_package</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="nm">nama</span><span class="muted">Combo A/B/Non</span></li>
+        <li class="fld"><span class="nm">kuota · biaya</span></li></ul></div>
+      <div class="ent"><div class="ent-h">cug_package_history</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">cug_card_id</span></li>
+        <li class="fld"><span class="nm">from → to</span></li>
+        <li class="fld"><span class="nm">changed_at</span></li></ul></div>
+    </div>
+
+    <div class="erd-group">C · Operasional</div>
+    <div class="erd-grid">
+      <div class="ent"><div class="ent-h">assignment (BAST)</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">asset_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">employee_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">sub_site_id</span></li>
+        <li class="fld"><span class="nm">tgl · bast_no</span></li></ul></div>
+      <div class="ent"><div class="ent-h">movement (mutasi)</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">asset_id</span></li>
+        <li class="fld"><span class="nm">jenis · from · to</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">approver_id</span></li>
+        <li class="fld"><span class="nm">status</span></li></ul></div>
+      <div class="ent"><div class="ent-h">maintenance_ticket</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">asset_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">vendor_id</span></li>
+        <li class="fld"><span class="nm">masalah · biaya</span></li>
+        <li class="fld"><span class="nm">status</span></li></ul></div>
+      <div class="ent"><div class="ent-h">loan (peminjaman)</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">asset_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">borrower_id</span></li>
+        <li class="fld"><span class="nm">tgl_pinjam · due</span></li>
+        <li class="fld"><span class="nm">status</span></li></ul></div>
+      <div class="ent"><div class="ent-h">disposal_request</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">asset_id</span></li>
+        <li class="fld"><span class="nm">alasan · metode</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">approver_id</span></li>
+        <li class="fld"><span class="nm">status · ba_no</span></li></ul></div>
+      <div class="ent"><div class="ent-h">audit_session</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">sub_site_id</span></li>
+        <li class="fld"><span class="nm">periode</span></li></ul></div>
+      <div class="ent"><div class="ent-h">audit_item</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">audit_session_id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">asset_id</span></li>
+        <li class="fld"><span class="nm">hasil_scan</span></li></ul></div>
+    </div>
+
+    <div class="erd-group">D · Sistem</div>
+    <div class="erd-grid">
+      <div class="ent"><div class="ent-h">import_batch</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="nm">tipe</span><span class="muted">aset/cug…</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">user_id</span></li>
+        <li class="fld"><span class="nm">total · valid · gagal</span></li></ul></div>
+      <div class="ent"><div class="ent-h">activity_log ⛓</div><ul>
+        <li class="fld"><span class="kbadge pk">PK</span><span class="nm mono">id</span></li>
+        <li class="fld"><span class="kbadge fk">FK</span><span class="nm mono">user_id</span></li>
+        <li class="fld"><span class="nm">entity · action</span></li>
+        <li class="fld"><span class="nm">created_at</span><span class="muted">immutable</span></li></ul></div>
+    </div>
+
+    <div class="erd-group" style="margin-top:26px">Relasi &amp; Kardinalitas</div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Dari</th><th>Relasi</th><th>Ke</th><th>Keterangan</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">site</td><td><span class="card-rel">1 — N</span></td><td class="mono">sub_site</td><td>1 kota punya banyak sub-site</td></tr>
+        <tr><td class="mono">sub_site</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>tiap aset terikat 1 sub-site</td></tr>
+        <tr><td class="mono">company</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>RKI / RWA / ALI / EJP / HMW</td></tr>
+        <tr><td class="mono">category</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>self-ref parent_id (bertingkat)</td></tr>
+        <tr><td class="mono">employee</td><td><span class="card-rel">1 — N</span></td><td class="mono">asset</td><td>sebagai PIC / pemegang</td></tr>
+        <tr><td class="mono">employee</td><td><span class="card-rel">1 — 1</span></td><td class="mono">user</td><td>akun login (opsional)</td></tr>
+        <tr><td class="mono">role</td><td><span class="card-rel">1 — N</span></td><td class="mono">user</td><td>RBAC</td></tr>
+        <tr><td class="mono">asset</td><td><span class="card-rel">1 — 1</span></td><td class="mono">cug_card</td><td><b>khusus HP &amp; Tablet</b> (opsional/nullable)</td></tr>
+        <tr><td class="mono">cug_package</td><td><span class="card-rel">1 — N</span></td><td class="mono">cug_card</td><td>Combo A / B / Non Paket</td></tr>
+        <tr><td class="mono">cug_card</td><td><span class="card-rel">1 — N</span></td><td class="mono">cug_package_history</td><td>riwayat ganti paket</td></tr>
+        <tr><td class="mono">asset</td><td><span class="card-rel">1 — N</span></td><td class="mono">assignment / movement / maintenance / loan / disposal / audit_item</td><td>seluruh aktivitas aset (timeline)</td></tr>
+        <tr><td class="mono">vendor</td><td><span class="card-rel">1 — N</span></td><td class="mono">maintenance_ticket</td><td>teknisi/servis</td></tr>
+        <tr><td class="mono">audit_session</td><td><span class="card-rel">1 — N</span></td><td class="mono">audit_item</td><td>hasil stock opname</td></tr>
+        <tr><td class="mono">user</td><td><span class="card-rel">1 — N</span></td><td class="mono">import_batch / activity_log</td><td>jejak aksi pengguna</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- STACK -->
+  <section class="card" id="stack">
+    <div class="tagn">Ringkas</div>
+    <div class="sec-t">Komponen Tech Stack</div>
+    <div class="sec-d">Paket rekomendasi (Laravel + Inertia + React).</div>
+    <div class="chips">
+      <span class="chip">React + TypeScript</span><span class="chip">shadcn/ui + Tailwind</span><span class="chip">Inertia.js</span>
+      <span class="chip">Laravel (PHP)</span><span class="chip">PostgreSQL</span><span class="chip">Redis + Horizon</span>
+      <span class="chip">S3 / MinIO</span><span class="chip">PhpSpreadsheet (xlsx)</span><span class="chip">DomPDF (BAST/label)</span>
+      <span class="chip">html5-qrcode (scan)</span><span class="chip">spatie/permission (RBAC)</span><span class="chip">PWA</span>
+      <span class="chip">Docker + VPS</span><span class="chip">GitHub Actions</span><span class="chip">Sentry</span>
+    </div>
+  </section>
+</div>
+</body>
+</html>
