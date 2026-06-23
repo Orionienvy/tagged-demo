@@ -1,4 +1,4 @@
-# Tagged — Manajemen Aset & Tracking (Prototype Trial)
+# Tagged — Manajemen Aset & Tracking (Prototype)
 
 Prototype/mockup UI aplikasi **Tagged** untuk manajemen aset & tracking.
 Bersifat **klik-able** (HTML statis, self-contained) — untuk demo & uji coba.
